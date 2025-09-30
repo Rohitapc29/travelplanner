@@ -1,0 +1,270 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f5f6fa;
+  color: #333;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Navbar */
+nav {
+  background-color: #003580;
+  color: white;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 100;
+  padding: 0.8rem 0;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav h1 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-links button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.nav-links button:hover {
+  color: #febb02;
+}
+
+.login-btn {
+  background-color: #febb02;
+  color: #003580;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.login-btn:hover {
+  background-color: #fecd3e;
+}
+
+/* Hero Section */
+.hero {
+  background: linear-gradient(to right, #e9f2ff, #f5faff);
+  text-align: center;
+  padding: 6rem 2rem 4rem;
+  margin-top: 70px;
+}
+
+.hero-text {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.hero h2 {
+  font-size: 2.5rem;
+  color: #003580;
+  margin-bottom: 1rem;
+  font-weight: 800;
+}
+
+.hero p {
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.hero button {
+  margin-top: 1.5rem;
+  padding: 0.8rem 1.6rem;
+  background-color: #febb02;
+  border: none;
+  color: #003580;
+  font-weight: bold;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.hero button:hover {
+  background-color: #fecd3e;
+}
+
+/* Sections */
+section {
+  padding: 3rem 2rem;
+  background-color: white;
+}
+
+/* Section headings */
+section h3 {
+  font-size: 1.8rem;
+  color: #003580;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Popular Travel Plans */
+.plans {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  padding-left: 2rem;
+}
+
+.plan-card {
+  min-width: 250px;
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.plan-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.plan-card .image {
+  height: 150px;
+  background: #ccc;
+  border-radius: 6px;
+  margin-bottom: 0.8rem;
+}
+
+/* Hotels Grid */
+.hotels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.hotel-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: 0.3s;
+}
+
+.hotel-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.hotel-card .image {
+  height: 180px;
+  background: #ccc;
+  border-radius: 6px;
+  margin-bottom: 0.8rem;
+}
+
+.hotel-card button {
+  margin-top: 0.8rem;
+  width: 100%;
+  background-color: #003580;
+  color: white;
+  border: none;
+  padding: 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.hotel-card button:hover {
+  background-color: #002050;
+}
+
+/* Screen Sections - Itinerary, Cart, My Plans */
+.screen-section {
+  padding: 6rem 1rem 3rem;
+  background-color: #f5f6fa;
+  width: 100vw; /* full viewport width */
+  min-height: calc(100vh - 140px);
+  box-sizing: border-box;
+}
+
+.screen-section h2 {
+  text-align: center;
+  font-size: 2rem;
+  color: #003580;
+  margin-bottom: 2rem;
+}
+
+/* Cards wrapper - full width with horizontal scroll */
+.screen-cards {
+  display: flex;
+  flex-wrap: nowrap; /* no wrap, allow horizontal scroll */
+  overflow-x: auto;
+  gap: 1rem;
+  width: 100%;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+.screen-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  min-width: 300px;  /* width of card */
+  flex: 0 0 auto; /* prevents shrinking, enables horizontal scroll */
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.screen-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.screen-card button {
+  margin-top: 0.8rem;
+  width: 100%;
+  background-color: #003580;
+  color: white;
+  border: none;
+  padding: 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.screen-card button:hover {
+  background-color: #002050;
+}
+
+/* Footer */
+footer {
+  background-color: #002050;
+  color: white;
+  padding: 2rem 0;
+  text-align: center;
+}
