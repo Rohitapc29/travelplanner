@@ -31,6 +31,6 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
-
+mailmap.txt
 # Misc
 *.local
