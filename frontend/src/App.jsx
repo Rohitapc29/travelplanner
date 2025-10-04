@@ -1,12 +1,15 @@
 import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import HotelsPage from './pages/hotels/HotelsPage';
 
 function App() {
-
   return (
-    <>
-      <h1>Frontend is running</h1>
-    </>
-  )
+    <Router>
+      <Routes>
+        <Route path="/hotels" element={<HotelsPage />} />
+      </Routes>
+    </Router>
+  );
 }
 
-export default App
+export default App;
