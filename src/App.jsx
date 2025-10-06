@@ -282,58 +282,70 @@ function App() {
             <button onClick={() => setPage("plans")}>My Plans</button>
           </div>
 
-          {user ? (
-            <div className="profile-section">
-              <div
-                className="profile-icon"
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-              >
-                👤
-              </div>
-              {showProfileMenu && (
-                <div className="profile-menu">
-                  <div style={{ marginBottom: "0.5rem" }}>
-                    <strong>Hi, {user.name} 👋</strong>
-                    <p>✉️ {user.email}</p>
-                    <p>🧭 {user.travellerType}</p>
-                  </div>
-                  <hr />
-                  <button
-                    onClick={() => {
-                      setPage("myprofile");
-                      setShowProfileMenu(false);
-                    }}
-                  >
-                    My Profile
-                  </button>
-                  <button
-                    onClick={() => {
-                      setPage("plans");
-                      setShowProfileMenu(false);
-                    }}
-                  >
-                    My Trips
-                  </button>
-                  <button
-                    onClick={() => {
-                      setPage("settings");
-                      setShowProfileMenu(false);
-                    }}
-                  >
-                    Settings
-                  </button>
-                  <hr />
-                  <button className="logout-btn" onClick={handleLogout}>
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <button className="login-btn" onClick={() => setShowModal(true)}>
-              Sign Up / Login
-            </button>
-          )}
+          {/* --- PASTE THIS ENTIRE BLOCK --- */}
+
+{user ? (
+  <div className="profile-section">
+    <div
+      className="profile-icon"
+      onClick={() => setShowProfileMenu(!showProfileMenu)}
+    >
+      {/* New SVG Icon */}
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        width="24px"
+        height="24px"
+      >
+        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+      </svg>
+    </div>
+
+    {showProfileMenu && (
+      <div className="profile-menu">
+        <div className="user-info">
+          <strong>Hi, {user.name} 👋</strong>
+          <p>{user.email}</p>
+          <p>{user.travellerType}</p>
+        </div>
+        <button
+          onClick={() => {
+            setPage("myprofile");
+            setShowProfileMenu(false);
+          }}
+        >
+          My Profile
+        </button>
+        <button
+          onClick={() => {
+            setPage("plans");
+            setShowProfileMenu(false);
+          }}
+        >
+          My Trips
+        </button>
+        <button
+          onClick={() => {
+            setPage("settings");
+            setShowProfileMenu(false);
+          }}
+        >
+          Settings
+        </button>
+        <button className="logout-btn" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
+    )}
+  </div>
+) : (
+  <button className="login-btn" onClick={() => setShowModal(true)}>
+    Sign Up / Login
+  </button>
+)}
+
+{/* --- END OF BLOCK TO PASTE --- */}
         </div>
       </nav>
 
@@ -419,7 +431,11 @@ function App() {
                         <option value="other">Other</option>
                       </select>
                       {travellerType === "other" && (
-                        <input type="text" placeholder="Please specify" required />
+                        <input
+                          type="text"
+                          placeholder="Please specify"
+                          required
+                        />
                       )}
                       <label>Password</label>
                       <input name="password" type="password" required />
@@ -436,34 +452,6 @@ function App() {
           </div>
         </div>
       )}
-
-      <style>{`
-        .modal-overlay {
-          position: fixed;
-          top:0; left:0; width:100%; height:100%;
-          background: rgba(0,0,0,0.6);
-          display: flex; justify-content: center; align-items: center;
-          z-index: 2000;
-        }
-        .modal-box {
-          background: white; border-radius: 10px; padding: 1.5rem;
-          width: 90%; max-width: 450px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-          max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;
-          animation: fadeIn 0.3s ease;
-        }
-        .scrollable-form { overflow-y: auto; max-height: 65vh; padding-right: 0.5rem; }
-        .modal-header { display:flex; justify-content:space-between; align-items:center; }
-
-        .profile-section { position: relative; }
-        .profile-icon { background-color: #febb02; border-radius: 50%; width:38px; height:38px; display:flex; justify-content:center; align-items:center; font-size:1.2rem; cursor:pointer; }
-        .profile-menu { position:absolute; right:0; top:50px; background:#fff; border-radius:8px; box-shadow:0 4px 10px rgba(0,0,0,0.15); padding:1rem; display:flex; flex-direction:column; gap:0.5rem; z-index:1000; min-width:220px; max-height:300px; overflow-y:auto; color:#003580; }
-        .profile-menu p { margin:0; font-size:0.9rem; white-space: normal; word-wrap: break-word; }
-        .profile-menu button { background:none; border:none; text-align:left; cursor:pointer; padding:0.4rem 0; color:#003580; font-weight:500; }
-        .profile-menu button:hover { color:#febb02; }
-        .logout-btn { color:red !important; font-weight:bold; }
-        .success-msg { text-align:center; font-weight:bold; color:green; font-size:1.1rem; padding-top:2rem; }
-        @keyframes fadeIn { from {opacity:0; transform:translateY(-20px);} to {opacity:1; transform:translateY(0);} }
-      `}</style>
     </div>
   );
 }
