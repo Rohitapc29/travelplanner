@@ -28,29 +28,16 @@ export default function FlightPage() {
       setLoading(false);
     }
   };
+const handleBook = async (flight) => {
+  try {
+    const res = await axios.post("http://localhost:4000/api/create-checkout-session", flight);
+    window.location.href = res.data.url; // redirect to Stripe checkout
+  } catch (err) {
+    console.error("Booking error:", err);
+    alert("Failed to start payment");
+  }
+};
 
-  /*const payWithRazorpay = async (flight) => {
-    const order = await axios.post("http://localhost:4000/api/create-order", {
-      amount: flight.inflatedPrice,
-    });
-
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID || "", // public key
-      amount: order.data.amount,
-      currency: "INR",
-      name: "Travel Planner",
-      description: `Booking ${flight.airline}`,
-      order_id: order.data.id,
-      handler: async (response) => {
-        const verify = await axios.post("http://localhost:4000/api/verify", response);
-        if (verify.data.success) alert("Payment Successful!");
-        else alert("Payment verification failed!");
-      },
-      theme: { color: "#1a73e8" },
-    };
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-  };*/
 
   return (
     <div style={{ padding: 20 }}>
@@ -99,7 +86,8 @@ export default function FlightPage() {
             <div>
               <b>₹{f.inflatedPrice}</b> <small>(includes commission)</small>
             </div>
-          {/* <button onClick={() => payWithRazorpay(f)}>Book Now</button> */}
+         <button onClick={() => handleBook(f)}>Book Now</button>
+
           </div>
         ))
       ) : (
