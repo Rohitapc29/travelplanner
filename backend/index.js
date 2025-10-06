@@ -1,160 +1,86 @@
 // index.js
 const express = require("express");
-const axios = require("axios");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
-const Stripe = require("stripe");
 
 dotenv.config();
 
 const app = express();
+
 app.use(cors());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT || 4000;
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // from .env
 
-let amadeusToken = null;
-let tokenExpiry = 0;
+const flightRoutes = require('./routes/flights');
+const bookingRoutes = require('./routes/booking');
+const airportRoutes = require('./routes/airports');
+const servicesRoutes = require('./routes/services');
+const weatherRoutes = require('./routes/weather');
+const currencyRoutes = require('./routes/currency');
+const statusRoutes = require('./routes/status');
 
-// --- Get Amadeus Token ---
-async function getAmadeusToken() {
-  const clientId = process.env.AMADEUS_CLIENT_ID;
-  const clientSecret = process.env.AMADEUS_CLIENT_SECRET;
-
-  if (!clientId || !clientSecret) {
-    throw new Error("AMADEUS_CLIENT_ID or AMADEUS_CLIENT_SECRET not configured");
-  }
-
-  if (amadeusToken && Date.now() < tokenExpiry) return amadeusToken;
-
-  const response = await axios.post(
-    "https://test.api.amadeus.com/v1/security/oauth2/token",
-    new URLSearchParams({
-      grant_type: "client_credentials",
-      client_id: clientId,
-      client_secret: clientSecret,
-    }),
-    { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-  );
-
-  amadeusToken = response.data.access_token;
-  tokenExpiry = Date.now() + response.data.expires_in * 1000;
-  console.log("✅ Amadeus token fetched");
-  return amadeusToken;
-}
-
-// --- Flights Route ---
-app.get("/api/flights", async (req, res) => {
-  console.log("DEBUG /api/flights called with:", req.query);
-  const { origin, destination, date, adults = 1, travelClass, airline } = req.query;
-
-  if (!origin || !destination || !date)
-    return res.status(400).json({ error: "origin, destination and date are required" });
-
-  const clientId = process.env.AMADEUS_CLIENT_ID;
-  const clientSecret = process.env.AMADEUS_CLIENT_SECRET;
-
-  // Fallback mock data if no credentials
-  if (!clientId || !clientSecret) {
-    console.warn("AMADEUS_CLIENT_* not set — returning mock flights");
-    const mock = [
-      {
-        id: "mock-1",
-        airline: airline || "AI",
-        departure: `${origin} - 2025-10-10T08:00:00`,
-        arrival: `${destination} - 2025-10-10T10:30:00`,
-        duration: "PT2H30M",
-        basePrice: "5000",
-        inflatedPrice: (5000 * 1.12).toFixed(2),
-      },
-      {
-        id: "mock-2",
-        airline: airline || "6E",
-        departure: `${origin} - 2025-10-10T12:00:00`,
-        arrival: `${destination} - 2025-10-10T14:45:00`,
-        duration: "PT2H45M",
-        basePrice: "6500",
-        inflatedPrice: (6500 * 1.12).toFixed(2),
-      },
-    ];
-    return res.json(mock);
-  }
-
-  // Real Amadeus call
-  try {
-    const token = await getAmadeusToken();
-    const params = {
-      originLocationCode: origin,
-      destinationLocationCode: destination,
-      departureDate: date,
-      adults,
-      travelClass: travelClass || "ECONOMY",
-      max: 20,
-    };
-    if (airline) params.includedAirlineCodes = airline;
-
-    const response = await axios.get(
-      "https://test.api.amadeus.com/v2/shopping/flight-offers",
-      { headers: { Authorization: `Bearer ${token}` }, params }
-    );
-
-    const USD_TO_INR = 83;
-    const offers = response.data.data.map((flight) => ({
-      id: flight.id,
-      airline:
-        flight.validatingAirlineCodes?.[0] ||
-        flight.itineraries[0].segments[0].carrierCode,
-      departure:
-        flight.itineraries[0].segments[0].departure.iataCode +
-        " - " +
-        flight.itineraries[0].segments[0].departure.at,
-      arrival:
-        flight.itineraries[0].segments.slice(-1)[0].arrival.iataCode +
-        " - " +
-        flight.itineraries[0].segments.slice(-1)[0].arrival.at,
-      duration: flight.itineraries[0].duration,
-      basePrice: flight.price.total,
-      inflatedPrice: (Number(flight.price.total) * 1.12 * USD_TO_INR).toFixed(2),
-    }));
-
-    console.log(`✅ Returned ${offers.length} flights`);
-    res.json(offers);
-  } catch (err) {
-    console.error("Flight search error:", err.response?.data || err.message);
-    res.status(500).json({ error: "Flight search failed" });
-  }
+// Health check route
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    version: '2.0.0'
+  });
 });
 
-// --- Stripe Checkout ---
-app.post("/api/create-checkout-session", async (req, res) => {
-  try {
-    const { airline, inflatedPrice, departure, arrival } = req.body;
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "inr",
-            product_data: {
-              name: `Flight ${airline}: ${departure} → ${arrival}`,
-            },
-            unit_amount: Math.round(Number(inflatedPrice) * 100),
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: "http://localhost:5173/success",
-      cancel_url: "http://localhost:5173/cancel",
-    });
+// API Routes
+app.use('/api/flights', flightRoutes);
+app.use('/api/booking', bookingRoutes);
+app.use('/api/airports', airportRoutes);
+app.use('/api/services', servicesRoutes);
+app.use('/api/weather', weatherRoutes);
+app.use('/api/currency', currencyRoutes);
+app.use('/api/status', statusRoutes);
 
-    res.json({ url: session.url });
-  } catch (error) {
-    console.error("Stripe Error:", error.message);
-    res.status(500).json({ error: "Payment session failed" });
-  }
+app.get("/api/flights", (req, res, next) => {
+  req.url = req.url.replace('/api/flights', '/api/flights/search');
+  flightRoutes(req, res, next);
 });
 
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.post("/api/create-checkout-session", (req, res, next) => {
+  req.url = req.url.replace('/api/create-checkout-session', '/api/booking/payment/create-session');
+  bookingRoutes(req, res, next);
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err.message);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  });
+});
+
+
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: 'Route not found',
+    requestedPath: req.path,
+    availableRoutes: [
+      'GET /api/flights/search',
+      'GET /api/flights/:flightId/seatmap',
+      'GET /api/airports/search',
+      'POST /api/booking/create',
+      'GET /api/booking/:pnr',
+      'POST /api/booking/payment/create-session',
+      'GET /api/services/flight/:flightId',
+      'POST /api/services/book'
+    ]
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`Enhanced Travel Planner Server running on port ${PORT}`);
+  console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`Flight search: http://localhost:${PORT}/api/flights/search`);
+  console.log(`Airport search: http://localhost:${PORT}/api/airports/search`);
+  console.log(`Services: http://localhost:${PORT}/api/services`);
+});
