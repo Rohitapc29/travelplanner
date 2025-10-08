@@ -1,10 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const Stripe = require('stripe');
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const bookings = {};
 
-const bookings = new Map();
 
 const generatePNR = () => {
   return 'TP' + Math.random().toString(36).substr(2, 6).toUpperCase();
@@ -12,178 +10,70 @@ const generatePNR = () => {
 
 router.post('/create', (req, res) => {
   try {
+    console.log("Booking request received:", req.body);
+    
     const { flightOffer, passengers, contactInfo } = req.body;
     
+    if (!flightOffer || !passengers || !passengers.length) {
+      console.log("Missing flight or passenger data");
+      return res.status(400).json({ error: "Missing flight or passenger data" });
+    }
     
-    if (!flightOffer || !passengers || !contactInfo) {
-      return res.status(400).json({ 
-        error: "Missing required booking data: flightOffer, passengers, and contactInfo are required" 
-      });
-    }
 
-    if (!Array.isArray(passengers) || passengers.length === 0) {
-      return res.status(400).json({ 
-        error: "At least one passenger is required" 
-      });
-    }
-
-    for (let i = 0; i < passengers.length; i++) {
-      const passenger = passengers[i];
-      if (!passenger.firstName || !passenger.lastName || !passenger.email) {
-        return res.status(400).json({ 
-          error: `Passenger ${i + 1}: firstName, lastName, and email are required` 
-        });
-      }
-    }
-
-    if (!contactInfo.email) {
-      return res.status(400).json({ 
-        error: "Contact email is required" 
-      });
-    }
-
-    const bookingReference = generatePNR();
+    const mainPassenger = passengers[0];
+    
+    console.log('Creating booking for passenger:', mainPassenger.firstName, mainPassenger.lastName);
+    console.log('Flight details:', flightOffer.airlineName, flightOffer.flightNumber);
+    
+    const pnr = generatePNR();
+    
     const booking = {
-      pnr: bookingReference,
-      status: "PENDING_PAYMENT", // Changed from CONFIRMED
-      bookingDate: new Date().toISOString(),
+      id: Math.floor(Math.random() * 100000),
+      pnr: pnr,
       flight: flightOffer,
       passengers: passengers,
-      contact: contactInfo,
-      totalPrice: flightOffer.inflatedPrice,
-      currency: "INR",
-      paymentStatus: "PENDING"
+      contactInfo: contactInfo,
+      status: 'CONFIRMED',
+      created: new Date().toISOString()
     };
-
- 
-    bookings.set(bookingReference, booking);
-    console.log(`Booking created with PNR: ${bookingReference} - Awaiting Payment`);
     
-    res.json({
-      success: true,
-      booking: booking,
-      message: "Booking created successfully! Please proceed to payment."
-    });
+    bookings[pnr] = booking;
     
+    console.log(`Booking created with PNR: ${pnr}`);
+    
+    setTimeout(() => {
+      res.json({
+        success: true,
+        booking: booking,
+        pnr: pnr,
+        message: 'Booking created successfully'
+      });
+    }, 500);
   } catch (error) {
-    console.error("Booking error:", error.message);
-    res.status(500).json({ error: "Booking failed" });
+    console.error('Booking creation error:', error);
+    res.status(500).json({ error: 'Booking creation failed' });
   }
-});
-
-router.get('/:pnr', (req, res) => {
-  const { pnr } = req.params;
-  const booking = bookings.get(pnr);
-  
-  if (!booking) {
-    return res.status(404).json({ error: "Booking not found" });
-  }
-  
-  res.json(booking);
 });
 
 
 router.get('/lookup/:pnr', (req, res) => {
-  const { pnr } = req.params;
-  const booking = bookings.get(pnr);
-  
-  if (!booking) {
-    return res.status(404).json({ error: "Booking not found" });
-  }
-  
-  res.json(booking);
-});
-
-router.post('/payment/create-session', async (req, res) => {
   try {
-    const { airline, inflatedPrice, departure, arrival, pnr, passengerName } = req.body;
+    const { pnr } = req.params;
+    console.log(`Looking up booking with PNR: ${pnr}`);
     
-    if (!process.env.STRIPE_SECRET_KEY) {
-      return res.status(500).json({ error: "Stripe not configured" });
+    const booking = bookings[pnr];
+    
+    if (!booking) {
+      console.log(`Booking not found: ${pnr}`);
+      return res.status(404).json({ error: 'Booking not found' });
     }
-
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "inr",
-            product_data: {
-              name: `Flight Booking - ${airline}`,
-              description: `${departure} → ${arrival} | PNR: ${pnr} | Passenger: ${passengerName}`,
-              metadata: {
-                pnr: pnr || 'N/A',
-                passenger: passengerName || 'N/A',
-                flight_route: `${departure} → ${arrival}`
-              }
-            },
-            unit_amount: Math.round(Number(inflatedPrice) * 100),
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}&pnr=${pnr}`,
-      cancel_url: `http://localhost:5173/flights?cancelled=true&pnr=${pnr}`,
-      metadata: {
-        pnr: pnr || 'N/A',
-        booking_type: 'flight',
-        passenger_name: passengerName || 'N/A'
-      }
-    });
-
-    if (pnr && bookings.has(pnr)) {
-      const booking = bookings.get(pnr);
-      booking.paymentSessionId = session.id;
-      booking.paymentStatus = "PROCESSING";
-      booking.paymentUrl = session.url;
-      bookings.set(pnr, booking);
-      console.log(`💳 Payment session created for PNR: ${pnr}`);
-    }
-
-    res.json({ 
-      url: session.url,
-      sessionId: session.id 
-    });
+    
+    console.log(`Booking found: ${booking.pnr}`);
+    res.json({ success: true, booking });
   } catch (error) {
-    console.error("Stripe Error:", error.message);
-    res.status(500).json({ 
-      error: "Payment session failed",
-      details: error.message 
-    });
+    console.error('Booking lookup error:', error);
+    res.status(500).json({ error: 'Booking lookup failed' });
   }
-});
-
-router.post('/payment/success', (req, res) => {
-  const { pnr, sessionId } = req.body;
-  
-  if (pnr && bookings.has(pnr)) {
-    const booking = bookings.get(pnr);
-    booking.status = "CONFIRMED";
-    booking.paymentStatus = "COMPLETED";
-    booking.paymentDate = new Date().toISOString();
-    booking.confirmationDate = new Date().toISOString();
-    if (sessionId) booking.paymentSessionId = sessionId;
-    bookings.set(pnr, booking);
-    
-    console.log(`✅ Payment completed and booking confirmed for PNR: ${pnr}`);
-  }
-  
-  res.json({ success: true, message: "Payment confirmed and booking finalized!" });
-});
-
-router.post('/payment/cancel', (req, res) => {
-  const { pnr } = req.body;
-  
-  if (pnr && bookings.has(pnr)) {
-    const booking = bookings.get(pnr);
-    booking.paymentStatus = "CANCELLED";
-    bookings.set(pnr, booking);
-    
-    console.log(`❌ Payment cancelled for PNR: ${pnr}`);
-  }
-  
-  res.json({ success: true, message: "Payment cancelled" });
 });
 
 module.exports = router;

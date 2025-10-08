@@ -2,6 +2,22 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const amadeus = require('../../config/amadeus');
+const { getAmadeusToken } = require('../../utils/amadeus');
+
+
+const hotelImages = [
+  "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80&auto=format",
+  "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80&auto=format",
+  "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800&q=80&auto=format",
+  "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80&auto=format",
+  "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80&auto=format",
+  "https://images.unsplash.com/photo-1522798514-97ceb8c4f1c8?w=800&q=80&auto=format",
+  "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800&q=80&auto=format",
+  "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&q=80&auto=format",
+  "https://images.unsplash.com/photo-1518733057094-95b53143d2a7?w=800&q=80&auto=format",
+  "https://images.unsplash.com/photo-1560200353-ce0a76b1d438?w=800&q=80&auto=format"
+];
 
 
 const generateHotels = (location, checkIn, checkOut, guests) => {
@@ -122,27 +138,146 @@ const generateHotels = (location, checkIn, checkOut, guests) => {
   });
 };
 
+// Mapping function to convert city names to IATA codes
+function getCityCode(cityName) {
+  const cityMap = {
+    // India
+    'Mumbai': 'BOM',
+    'Delhi': 'DEL',
+    'New Delhi': 'DEL',
+    'Bangalore': 'BLR',
+    'Bengaluru': 'BLR',
+    'Chennai': 'MAA',
+    'Hyderabad': 'HYD',
+    'Kolkata': 'CCU',
+    'Goa': 'GOI',
+    'Jaipur': 'JAI',
+    'Ahmedabad': 'AMD',
+    'Pune': 'PNQ',
+    'Kochi': 'COK',
+    'Lucknow': 'LKO',
+    'Thiruvananthapuram': 'TRV',
+    'Chandigarh': 'IXC',
+    'Guwahati': 'GAU',
+    'Bhubaneswar': 'BBI',
+    'Visakhapatnam': 'VTZ',
+    'Nagpur': 'NAG',
+    'Coimbatore': 'CJB',
+    'Indore': 'IDR',
+    'Varanasi': 'VNS',
+    'Udaipur': 'UDR',
+    'Agra': 'AGR',
+    // International cities
+    'London': 'LON',
+    'New York': 'NYC',
+    'Dubai': 'DXB',
+    'Singapore': 'SIN',
+    'Bangkok': 'BKK',
+    'Paris': 'PAR',
+    'Tokyo': 'TYO',
+    'Hong Kong': 'HKG',
+    'Sydney': 'SYD',
+    'Los Angeles': 'LAX',
+    'Barcelona': 'BCN',
+    'Berlin': 'BER',
+    'Rome': 'ROM',
+    'Amsterdam': 'AMS',
+    'Istanbul': 'IST',
+    'Kuala Lumpur': 'KUL',
+    'Cairo': 'CAI',
+    'Beijing': 'BJS',
+    'Shanghai': 'SHA',
+    'Seoul': 'SEL',
+    'Toronto': 'YTO',
+    'Cape Town': 'CPT',
+    'Madrid': 'MAD',
+    'Vienna': 'VIE',
+    'Zurich': 'ZRH',
+    'Munich': 'MUC',
+    'Prague': 'PRG',
+    'Athens': 'ATH',
+    'Moscow': 'MOW',
+    'Stockholm': 'STO'
+  };
+  
+  return cityMap[cityName] || cityName.substring(0, 3).toUpperCase();
+}
 
 router.get('/search', async (req, res) => {
   try {
     const { location, checkIn, checkOut, guests } = req.query;
-
-    console.log('Hotel search request:', { location, checkIn, checkOut, guests });
-
-    if (!location || !checkIn || !checkOut) {
-      return res.status(400).json({ error: 'Missing required parameters: location, checkIn, checkOut' });
-    }
-
-    console.log('Generating enhanced hotel data...');
     
+    console.log('Hotel search request:', { location, checkIn, checkOut, guests });
+    
+    try {
+      console.log('Attempting to use Amadeus API for real hotel data');
+      const cityCode = getCityCode(location);
+      console.log(`Mapped ${location} to city code: ${cityCode}`);
+      
+      const token = await getAmadeusToken();
+      console.log('Successfully obtained Amadeus token');
+      
+      console.log(`Making request to Amadeus for hotels in ${cityCode}`);
+      
+      const response = await axios.get(
+        'https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city', 
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { cityCode: cityCode }
+        }
+      );
+      
+      if (response.data && response.data.data && response.data.data.length > 0) {
+        console.log(`✅ Found ${response.data.data.length} hotels from Amadeus API`);
+       
+        const displayLimit = 25; // Show up to 25 hotels
+        const hotelsToDisplay = response.data.data.slice(0, displayLimit);
+        
+        console.log(`Processing ${hotelsToDisplay.length} hotels for display`);
+        
+
+        const processedHotels = hotelsToDisplay.map(hotel => {
+          // Generate random price based on hotel name length (just for variety)
+          const basePrice = 3000 + (hotel.name.length * 200);
+          
+          return {
+            id: hotel.hotelId,
+            name: hotel.name,
+            rating: ((Math.random() * 1.5) + 3.5).toFixed(1), // Random rating between 3.5-5.0
+            basePrice: basePrice,
+            price: basePrice,
+            description: "Modern hotel with comfortable accommodations in a convenient location.",
+            amenities: ['WiFi', 'Air Conditioning', 'Restaurant', '24-hour Front Desk'],
+            category: 'hotel',
+            address: {
+              lines: [hotel.address?.lines?.join(', ') || ''],
+              cityName: cityCode === 'DEL' ? 'Delhi' : (hotel.address?.cityName || cityCode),
+              countryCode: hotel.address?.countryCode || 'IN'
+            },
+            cityCode: cityCode,
+  
+            image: hotelImages[Math.floor(Math.random() * hotelImages.length)]
+          };
+        });
+        
+        console.log(`✅ SUCCESS! Returning ${processedHotels.length} hotels for display`);
+        return res.json(processedHotels);
+      }
+    } catch (amadeusError) {
+      console.error('Amadeus API error:', amadeusError.message);
+      if (amadeusError.response && amadeusError.response.data) {
+        console.error('Error details:', amadeusError.response.data);
+      }
+    }
+    
+    // Fall back to mock data if Amadeus API fails
+    console.log('⚠️ ');
     const hotelPromises = generateHotels(location, checkIn, checkOut, guests);
     const hotels = await Promise.all(hotelPromises);
-
-    console.log('Successfully generated hotels:', hotels.length);
-
+    
+    console.log('Generated mock hotels:', hotels.length);
     res.json(hotels);
-  } 
-  catch (error) {
+  } catch (error) {
     console.error('Hotel search error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -156,91 +291,172 @@ router.get('/:hotelId', async (req, res) => {
 
     console.log('Hotel details request:', { hotelId, checkIn, checkOut, guests, location });
 
-   
-    const cityName = location || 'Mumbai'; // Default fallback city
+    try {
+      const token = await getAmadeusToken();
+      
+      const response = await axios.get(
+        'https://test.api.amadeus.com/v3/shopping/hotel-offers',
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            hotelIds: hotelId,
+            checkInDate: checkIn,
+            checkOutDate: checkOut,
+            adults: guests || '1',
+            roomQuantity: '1',
+            currency: 'INR'
+          }
+        }
+      );
+      
+      if (response.data && response.data.data && response.data.data.length > 0) {
+        console.log('Found hotel details from Amadeus API');
+        
+        const hotelData = response.data.data[0];
+        const hotel = hotelData.hotel;
+        
+        
+        const cityName = hotel.address?.cityName || location || getCityNameFromCode(hotelId.substring(2, 5));
+        console.log(`Using city name for attractions: ${cityName}`);
+        
+    
+        const hotelDetails = {
+          hotel: {
+            hotelId: hotel.hotelId,
+            name: hotel.name,
+            rating: hotel.rating || 4.2,
+            description: { text: hotel.description?.text || "Luxury hotel with modern amenities and convenient location." },
+            address: hotel.address || { cityName: cityName, countryCode: 'IN' },
+            amenities: hotel.amenities || ['Free WiFi', 'Swimming Pool', 'Restaurant']
+          },
+          offers: hotelData.offers.map(offer => ({
+            id: offer.id,
+            room: offer.room,
+            price: offer.price,
+            policies: offer.policies
+          })),
+          id: hotel.hotelId,
+          name: hotel.name,
+          rating: hotel.rating,
+          description: hotel.description?.text || "Luxury hotel with modern amenities and convenient location.",
+          amenities: hotel.amenities || ['Free WiFi', 'Swimming Pool', 'Restaurant'],
+          category: 'hotel',
+          address: hotel.address || { cityName: cityName, countryCode: 'IN' },
+          image: `https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80&auto=format&fit=crop`,
+          images: [
+            `https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80&auto=format&fit=crop`,
+            `https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&q=80&auto=format&fit=crop`,
+            `https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&q=80&auto=format&fit=crop`,
+            `https://images.unsplash.com/photo-1562133567-b6a0a9c7e6eb?w=400&q=80&auto=format&fit=crop`
+          ]
+        };
 
-    const hotelPromises = generateHotels(cityName, checkIn, checkOut, guests);
-    const hotels = await Promise.all(hotelPromises);
-    const hotel = hotels.find(h => h.id === hotelId);
-
-    if (!hotel) {
-      return res.status(404).json({ error: 'Hotel not found' });
+        hotelDetails.offers = [
+          {
+            type: 'Standard Room',
+            price: parseInt(hotelData.offers[0]?.price?.total) || 5000,
+            amenities: ['Free WiFi', 'Air Conditioning', 'Room Service', 'Daily Housekeeping']
+          },
+          {
+            type: 'Deluxe Room',
+            price: parseInt(hotelData.offers[0]?.price?.total * 1.3) || 6500,
+            amenities: ['Free WiFi', 'Air Conditioning', 'Room Service', 'Daily Housekeeping', 'City View', 'Mini Bar']
+          },
+          {
+            type: 'Executive Suite',
+            price: parseInt(hotelData.offers[0]?.price?.total * 1.8) || 9000,
+            amenities: ['Free WiFi', 'Air Conditioning', 'Room Service', 'Daily Housekeeping', 'City View', 'Mini Bar', 'Separate Living Area', 'Executive Lounge Access']
+          }
+        ];
+        
+        
+        console.log('Getting weather for:', cityName);
+        const weatherData = await getWeatherData(cityName, checkIn);
+        if (weatherData) {
+          hotelDetails.weather = weatherData;
+          console.log('Weather data added successfully');
+        }
+        
+        
+        console.log('Getting attractions for:', cityName);
+        const attractions = await getNearbyAttractions(cityName);
+        if (attractions && attractions.length > 0) {
+          hotelDetails.attractions = attractions;
+          console.log('Attractions added:', attractions.length);
+        }
+        
+        const countryInfo = await getCountryInfo(hotel.address?.countryCode || 'IN');
+        if (countryInfo) {
+          hotelDetails.countryInfo = countryInfo;
+          console.log('Country info added');
+        }
+        
+        return res.json(hotelDetails);
+      }
+    } catch (amadeusError) {
+      console.error('Amadeus hotel details error:', amadeusError.message);
     }
+    
+
+    console.log('Amadeus API failed for hotel details, using mock data');
+    const cityName = location || getCityNameFromCode(hotelId.substring(2, 5)) || 'Delhi';
+    console.log(`Using cityName: ${cityName} for  hotel`);
+
+    const mockHotel = {
+      id: hotelId,
+      name: `${cityName} ${hotelId.substring(0, 4)} Hotel`,
+      rating: 4.2 + (Math.random() * 0.6),
+      basePrice: 4500 + (Math.floor(Math.random() * 5000)),
+      price: 4500 + (Math.floor(Math.random() * 5000)),
+      description: `Experience luxury and comfort at our premier hotel in ${cityName}. Featuring elegant rooms, top-notch amenities, and exceptional service, our hotel is perfectly situated to explore the city's attractions.`,
+      amenities: ['Free WiFi', 'Swimming Pool', 'Spa & Wellness Center', 'Fine Dining Restaurant', 'Fitness Center', '24/7 Room Service', 'Business Center', 'Valet Parking'],
+      category: 'luxury',
+      address: {
+        lines: [`${Math.floor(Math.random() * 500) + 1} ${cityName} Avenue`],
+        cityName: cityName,
+        countryCode: 'IN'
+      },
+      image: `https://source.unsplash.com/featured/?hotel,building/${hotelId}`
+    };
 
     const hotelDetails = {
       hotel: {
-        hotelId: hotel.id,
-        name: hotel.name,
-        rating: hotel.rating,
-        description: { text: hotel.description },
-        address: hotel.address,
-        amenities: hotel.amenities,
-        category: hotel.category
+        hotelId: mockHotel.id,
+        name: mockHotel.name,
+        rating: mockHotel.rating,
+        description: { text: mockHotel.description },
+        address: mockHotel.address,
+        amenities: mockHotel.amenities,
+        category: mockHotel.category || 'luxury'
       },
-      offers: [
-        {
-          id: `${hotelId}_STANDARD`,
-          room: {
-            typeEstimated: { category: 'Standard Room' },
-            description: { text: 'Comfortable standard room with modern amenities' }
-          },
-          price: { total: hotel.price.toString(), currency: 'INR' },
-          policies: {
-            cancellations: { amount: '100.00', deadline: checkIn }
-          }
-        },
-        {
-          id: `${hotelId}_DELUXE`,
-          room: {
-            typeEstimated: { category: 'Deluxe Room' },
-            description: { text: 'Spacious deluxe room with premium amenities and city view' }
-          },
-          price: { total: Math.round(hotel.price * 1.3).toString(), currency: 'INR' },
-          policies: {
-            cancellations: { amount: '150.00', deadline: checkIn }
-          }
-        },
-        {
-          id: `${hotelId}_SUITE`,
-          room: {
-            typeEstimated: { category: 'Executive Suite' },
-            description: { text: 'Luxurious suite with separate living area, premium amenities, and stunning views' }
-          },
-          price: { total: Math.round(hotel.price * 1.8).toString(), currency: 'INR' },
-          policies: {
-            cancellations: { amount: '250.00', deadline: checkIn }
-          }
-        }
-      ],
-
-      id: hotel.id,
-      name: hotel.name,
-      rating: hotel.rating,
-      description: hotel.description,
-      amenities: hotel.amenities,
-      category: hotel.category,
-      address: hotel.address,
-      image: hotel.image,
+      id: mockHotel.id,
+      name: mockHotel.name,
+      rating: mockHotel.rating,
+      description: mockHotel.description,
+      amenities: mockHotel.amenities,
+      category: mockHotel.category || 'luxury',
+      address: mockHotel.address,
+      image: `https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80&auto=format&fit=crop`,
       images: [
-        hotel.image,
-        await getUnsplashImage(`${hotel.category} hotel room`, 'hotel room'),
-        await getUnsplashImage(`${hotel.category} hotel lobby`, 'hotel lobby'),
-        await getUnsplashImage(`${hotel.category} hotel restaurant`, 'hotel restaurant')
+        `https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80&auto=format&fit=crop`,
+        `https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&q=80&auto=format&fit=crop`,
+        `https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&q=80&auto=format&fit=crop`,
+        `https://images.unsplash.com/photo-1562133567-b6a0a9c7e6eb?w=400&q=80&auto=format&fit=crop`
       ],
       offers: [
         {
           type: 'Standard Room',
-          price: hotel.price,
+          price: mockHotel.price,
           amenities: ['Free WiFi', 'Air Conditioning', 'Room Service', 'Daily Housekeeping']
         },
         {
           type: 'Deluxe Room',
-          price: Math.round(hotel.price * 1.3),
+          price: Math.round(mockHotel.price * 1.3),
           amenities: ['Free WiFi', 'Air Conditioning', 'Room Service', 'Daily Housekeeping', 'City View', 'Mini Bar']
         },
         {
           type: 'Executive Suite',
-          price: Math.round(hotel.price * 1.8),
+          price: Math.round(mockHotel.price * 1.8),
           amenities: ['Free WiFi', 'Air Conditioning', 'Room Service', 'Daily Housekeeping', 'City View', 'Mini Bar', 'Separate Living Area', 'Executive Lounge Access']
         }
       ]
@@ -260,7 +476,7 @@ router.get('/:hotelId', async (req, res) => {
       console.log('Attractions added:', attractions.length);
     }
 
-    const countryInfo = await getCountryInfo(hotel.address.countryCode);
+    const countryInfo = await getCountryInfo(mockHotel.address.countryCode);
     if (countryInfo) {
       hotelDetails.countryInfo = countryInfo;
       console.log('Country info added');
@@ -478,3 +694,19 @@ router.post('/create-checkout-session', async (req, res) => {
 });
 
 module.exports = router;
+
+function getCityNameFromCode(code) {
+  const cityCodeMap = {
+    'DEL': 'Delhi',
+    'BOM': 'Mumbai',
+    'BLR': 'Bangalore',
+    'MAA': 'Chennai',
+    'HYD': 'Hyderabad',
+    'CCU': 'Kolkata',
+    'GOI': 'Goa',
+    'JAI': 'Jaipur',
+    'IXC': 'Chandigarh',
+  };
+  
+  return cityCodeMap[code] || 'Delhi'; 
+}

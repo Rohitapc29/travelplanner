@@ -13,20 +13,28 @@ const getAmadeusToken = async () => {
 
   if (amadeusToken && Date.now() < tokenExpiry) return amadeusToken;
 
-  const response = await axios.post(
-    "https://test.api.amadeus.com/v1/security/oauth2/token",
-    new URLSearchParams({
-      grant_type: "client_credentials",
-      client_id: clientId,
-      client_secret: clientSecret,
-    }),
-    { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-  );
+  try {
+    const response = await axios.post(
+      "https://test.api.amadeus.com/v1/security/oauth2/token",
+      new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: clientId,
+        client_secret: clientSecret,
+      }),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+    );
 
-  amadeusToken = response.data.access_token;
-  tokenExpiry = Date.now() + response.data.expires_in * 1000;
-  console.log("Amadeus token fetched");
-  return amadeusToken;
+    amadeusToken = response.data.access_token;
+    tokenExpiry = Date.now() + response.data.expires_in * 1000;
+    console.log("Amadeus token fetched successfully");
+    return amadeusToken;
+  } catch (error) {
+    console.error("Failed to get Amadeus token:", error.message);
+    if (error.response && error.response.data) {
+      console.error("Amadeus error details:", error.response.data);
+    }
+    throw new Error("Amadeus authentication failed");
+  }
 };
 
 const searchAirports = async (keyword) => {

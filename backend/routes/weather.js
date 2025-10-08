@@ -2,65 +2,101 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
-router.get('/destination/:iataCode', async (req, res) => {
-  try {
-    const { iataCode } = req.params;
-    
-    const cityMap = {
-      'DEL': 'Delhi',
-      'BOM': 'Mumbai', 
-      'BLR': 'Bangalore',
-      'MAA': 'Chennai',
-      'CCU': 'Kolkata',
-      'HYD': 'Hyderabad'
-    };
-    
-    const city = cityMap[iataCode] || 'Delhi';
-    
-    const apiKey = process.env.OPENWEATHER_API_KEY;
-    const weatherRes = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
-    
-    const mockWeather = {
-      city: city,
-      temperature: Math.floor(Math.random() * 15) + 20, // 20-35°C
-      condition: ['Sunny', 'Cloudy', 'Rainy', 'Clear'][Math.floor(Math.random() * 4)],
-      humidity: Math.floor(Math.random() * 30) + 40, // 40-70%
-      description: 'Perfect weather for travel!'
-    };
-    
-    res.json(mockWeather);
-  } catch (err) {
-    res.status(500).json({ error: 'Weather fetch failed' });
-  }
-});
+
+const weatherCache = new Map();
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 router.get('/:cityCode', async (req, res) => {
   try {
     const { cityCode } = req.params;
+    console.log(`Weather request for city code: ${cityCode}`);
+    
+    const cacheKey = cityCode;
+    const now = Date.now();
+    if (weatherCache.has(cacheKey)) {
+      const cachedData = weatherCache.get(cacheKey);
+      if (now - cachedData.timestamp < CACHE_TTL) {
+        console.log(`Using cached weather data for ${cityCode}`);
+        return res.json(cachedData.data);
+      }
+    }
   
-    const cityMap = {
+    const cityMapping = {
+      'BOM': 'Mumbai',
       'DEL': 'Delhi',
-      'BOM': 'Mumbai', 
       'BLR': 'Bangalore',
       'MAA': 'Chennai',
+      'HYD': 'Hyderabad',
       'CCU': 'Kolkata',
-      'HYD': 'Hyderabad'
+      'GOI': 'Goa',
+      'JFK': 'New York',
+      'LHR': 'London',
+      'SIN': 'Singapore',
+      'DXB': 'Dubai'
+
     };
     
-    const city = cityMap[cityCode] || 'Delhi';
+    const cityName = cityMapping[cityCode] || cityCode;
     
-    const mockWeather = {
-      city: city,
-      temperature: Math.floor(Math.random() * 15) + 20, // 20-35°C
-      condition: ['Sunny', 'Cloudy', 'Rainy', 'Clear'][Math.floor(Math.random() * 4)],
-      humidity: Math.floor(Math.random() * 30) + 40, // 40-70%
-      rainfall: Math.floor(Math.random() * 50), // 0-50% chance
-      description: 'Perfect weather for travel!'
+    if (!process.env.OPENWEATHER_API_KEY) {
+      // FIX THIS LATER!!!
+      const mockData = {
+        city: cityName,
+        temperature: Math.floor(Math.random() * 15) + 20, // 20-35
+        humidity: Math.floor(Math.random() * 30) + 50,    // 50-80
+        condition: ['Sunny', 'Partly Cloudy', 'Cloudy', 'Light Rain'][Math.floor(Math.random() * 4)],
+        rainfall: Math.random() > 0.5 ? Math.floor(Math.random() * 40) : 0
+      };
+      
+      weatherCache.set(cacheKey, {
+        timestamp: now,
+        data: mockData
+      });
+      
+      return res.json(mockData);
+    }
+    
+    const response = await axios.get(`http://api.openweathermap.org/data/2.5/weather`, {
+      params: {
+        q: cityName,
+        appid: process.env.OPENWEATHER_API_KEY,
+        units: 'metric'
+      },
+      timeout: 5000
+    });
+    
+    const weatherData = {
+      city: cityName,
+      temperature: response.data.main.temp,
+      humidity: response.data.main.humidity,
+      condition: response.data.weather[0].description,
+      rainfall: response.data.rain ? response.data.rain['1h'] * 100 : 0
     };
     
-    res.json(mockWeather);
-  } catch (err) {
-    res.status(500).json({ error: 'Weather fetch failed' });
+    
+    weatherCache.set(cacheKey, {
+      timestamp: now,
+      data: weatherData
+    });
+    
+    res.json(weatherData);
+  } catch (error) {
+    console.error('Weather API error:', error.message);
+    
+    const errorData = {
+      city: req.params.cityCode,
+      temperature: 25,
+      humidity: 60,
+      condition: 'Clear sky',
+      rainfall: 0
+    };
+    
+    weatherCache.set(cacheKey, {
+      timestamp: now,
+      data: errorData
+    });
+    
+    res.json(errorData);
   }
 });
 

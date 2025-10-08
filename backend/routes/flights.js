@@ -1,104 +1,102 @@
 const express = require('express');
 const router = express.Router();
+const axios = require('axios');
+const { getAmadeusToken } = require('../utils/amadeus');
 
-
-const generateEnhancedFlights = (origin, destination, date, travelClass, airline) => {
-  const flights = [
-    {
-      id: "mock-1",
-      airline: airline || "AI",
-      airlineName: "Air India",
-      flightNumber: "AI 131",
-      departure: {
-        iataCode: origin,
-        time: "08:00",
-        date: date,
-        terminal: "3",
-        gate: "A12"
-      },
-      arrival: {
-        iataCode: destination,
-        time: "10:30",
-        date: date,
-        terminal: "1",
-        gate: "B7"
-      },
-      duration: "2h 30m",
-      stops: 0,
-      aircraft: {
-        type: "Boeing 737-800",
-        totalSeats: 162,
-        configuration: "3-3"
-      },
-      basePrice: "5000",
-      inflatedPrice: (5000 * 1.12).toFixed(2),
-      currency: "INR",
-      cabinClass: travelClass || "ECONOMY",
-      baggage: {
-        included: "15kg",
-        options: [
-          { weight: "25kg", price: "1500" },
-          { weight: "35kg", price: "2500" }
-        ]
-      },
-      fareType: "PUBLISHED",
-      amenities: ["Meal", "WiFi", "Entertainment"],
-      seatMap: generateSeatMap("Boeing 737-800"),
-      mealOptions: [
-        { type: "Vegetarian", price: "0", included: true },
-        { type: "Non-Vegetarian", price: "0", included: true },
-        { type: "Special Dietary", price: "500", included: false }
-      ]
-    },
-    {
-      id: "mock-2",
-      airline: airline || "6E",
-      airlineName: "IndiGo",
-      flightNumber: "6E 2131",
-      departure: {
-        iataCode: origin,
-        time: "12:00",
-        date: date,
-        terminal: "2",
-        gate: "C15"
-      },
-      arrival: {
-        iataCode: destination,
-        time: "14:45",
-        date: date,
-        terminal: "1",
-        gate: "A3"
-      },
-      duration: "2h 45m",
-      stops: 0,
-      aircraft: {
-        type: "Airbus A320",
-        totalSeats: 150,
-        configuration: "3-3"
-      },
-      basePrice: "6500",
-      inflatedPrice: (6500 * 1.12).toFixed(2),
-      currency: "INR",
-      cabinClass: travelClass || "ECONOMY",
-      baggage: {
-        included: "15kg",
-        options: [
-          { weight: "25kg", price: "1200" },
-          { weight: "35kg", price: "2000" }
-        ]
-      },
-      fareType: "PUBLISHED",
-      amenities: ["Snacks", "WiFi"],
-      seatMap: generateSeatMap("Airbus A320"),
-      mealOptions: [
-        { type: "Buy on Board", price: "300", included: false }
-      ]
+const transformAmadeusFlights = (amadeusFlights) => {
+  return amadeusFlights.map(flight => {
+    
+    const segment = flight.itineraries[0].segments[0];
+    
+    
+    const carrierCode = segment.carrierCode;
+    
+    let airlineName = carrierCode;
+    if (flight.dictionaries && flight.dictionaries.carriers) {
+      airlineName = flight.dictionaries.carriers[carrierCode] || carrierCode;
     }
-  ];
-  return flights;
+    
+
+    const departure = {
+      iataCode: segment.departure.iataCode,
+      time: segment.departure.at.substring(11, 16), 
+      date: segment.departure.at.substring(0, 10), 
+      terminal: segment.departure.terminal || "-"
+    };
+    
+    const arrival = {
+      iataCode: segment.arrival.iataCode,
+      time: segment.arrival.at.substring(11, 16), 
+      date: segment.arrival.at.substring(0, 10), 
+      terminal: segment.arrival.terminal || "-"
+    };
+    
+   
+    const price = flight.price.total;
+    const inflatedPrice = (parseFloat(price) * 1.12).toFixed(2);
+    
+  
+    const cabinClass = flight.travelerPricings[0].fareDetailsBySegment[0].cabin;
+    
+    
+    const flightNumber = `${carrierCode} ${segment.number}`;
+    
+    
+    const id = flight.id || `flight-${Math.random().toString(36).substring(2, 10)}`;
+    
+    return {
+      id: id,
+      airline: carrierCode,
+      airlineName: airlineName,
+      flightNumber: flightNumber,
+      departure: {
+        ...departure,
+        gate: `${String.fromCharCode(65 + Math.floor(Math.random() * 8))}${Math.floor(Math.random() * 30) + 1}`
+      },
+      arrival: {
+        ...arrival,
+        gate: `${String.fromCharCode(65 + Math.floor(Math.random() * 8))}${Math.floor(Math.random() * 30) + 1}`
+      },
+      duration: formatDuration(segment.duration),
+      stops: flight.itineraries[0].segments.length - 1,
+      aircraft: {
+        type: segment.aircraft?.code || "Boeing 737-800",
+        totalSeats: 180,
+        configuration: "3-3"
+      },
+      basePrice: price,
+      inflatedPrice: inflatedPrice,
+      currency: flight.price.currency,
+      cabinClass: cabinClass,
+      baggage: {
+        included: "15kg",
+        options: [
+          { weight: "25kg", price: Math.round(parseFloat(price) * 0.2).toString() },
+          { weight: "35kg", price: Math.round(parseFloat(price) * 0.35).toString() }
+        ]
+      },
+      fareType: flight.pricingOptions?.fareType || "PUBLISHED",
+      amenities: ["WiFi", "Entertainment"],
+      seatMap: generateSeatMap(segment.aircraft?.code || "Boeing 737-800"),
+      mealOptions: generateMealOptions(carrierCode)
+    };
+  });
 };
 
-// Generate seat map
+
+const formatDuration = (isoDuration) => {
+  let hours = 0;
+  let minutes = 0;
+  
+  const hourMatch = isoDuration.match(/(\d+)H/);
+  const minuteMatch = isoDuration.match(/(\d+)M/);
+  
+  if (hourMatch) hours = parseInt(hourMatch[1]);
+  if (minuteMatch) minutes = parseInt(minuteMatch[1]);
+  
+  return `${hours}h ${minutes}m`;
+}
+
 const generateSeatMap = (aircraftType) => {
   const seatMap = {
     aircraft: aircraftType,
@@ -138,10 +136,26 @@ const generateSeatMap = (aircraftType) => {
   }
 
   return seatMap;
-};
+}
 
-router.get('/search', (req, res) => {
-  console.log("Enhanced flight search called with:", req.query);
+const generateMealOptions = (airlineCode) => {
+  if (['AI', 'UK', '9W', 'EK', 'QR', 'LH', 'BA', 'SQ', 'CX', 'TG'].includes(airlineCode)) {
+    return [
+      { type: "Vegetarian", price: "0", included: true },
+      { type: "Non-Vegetarian", price: "0", included: true },
+      { type: "Special Dietary", price: "500", included: false }
+    ];
+  } 
+  else {
+    return [
+      { type: "Buy on Board", price: "300", included: false }
+    ];
+  }
+}
+
+
+router.get('/search', async (req, res) => {
+  console.log("Flight search called with:", req.query);
   const { origin, destination, date, adults = 1, travelClass, airline } = req.query;
 
   if (!origin || !destination || !date) {
@@ -149,29 +163,128 @@ router.get('/search', (req, res) => {
   }
 
   try {
-    const enhancedFlights = generateEnhancedFlights(origin, destination, date, travelClass, airline);
-    console.log(`Returned ${enhancedFlights.length} enhanced flights with seat maps`);
-    res.json(enhancedFlights);
-  } catch (err) {
-    console.error("Flight search error:", err);
-    res.status(500).json({ error: "Flight search failed" });
-  }
-});
-
-router.get('/:flightId/seatmap', (req, res) => {
-  const { flightId } = req.params;
+    
+    const token = await getAmadeusToken();
+    console.log("Getting real flight data from Amadeus API");
+    
+    
+    const travelClassMap = {
+      'ECONOMY': 'ECONOMY',
+      'BUSINESS': 'BUSINESS',
+      'FIRST': 'FIRST',
+      'PREMIUM_ECONOMY': 'PREMIUM_ECONOMY'
+    };
+    
+    const amadeusClass = travelClassMap[travelClass] || 'ECONOMY';
+    
   
-  const mockSeatMap = generateSeatMap("Boeing 737-800");
-  
-  res.json({
-    flightId,
-    seatMap: mockSeatMap,
-    pricing: {
-      standard: "500",
-      premium: "1000",
-      emergency: "1500"
+    const params = {
+      originLocationCode: origin,
+      destinationLocationCode: destination,
+      departureDate: date,
+      adults: adults.toString(),
+      currencyCode: 'INR',
+      max: '250' // Request maximum flights
+    };
+    
+    
+    if (travelClass) {
+      params.travelClass = amadeusClass;
     }
-  });
+    
+    
+    if (airline) {
+      params.includedAirlineCodes = airline;
+    }
+    
+    
+    const response = await axios.get(
+      'https://test.api.amadeus.com/v2/shopping/flight-offers',
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        params: params
+      }
+    );
+    
+    
+    if (response.data && response.data.data && response.data.data.length > 0) {
+      const amadeusFlights = response.data.data;
+      console.log(`✅ SUCCESS! Found ${amadeusFlights.length} REAL flights from Amadeus API`);
+      
+      
+      const transformedFlights = transformAmadeusFlights(amadeusFlights);
+      console.log(`Transformed ${transformedFlights.length} flights to app format`);
+      
+      return res.json(transformedFlights);
+    } else {
+      console.log("No flights found in Amadeus API response");
+      throw new Error("No flights found");
+    }
+  } catch (err) {
+    console.error("Amadeus API error:", err.message);
+    console.error("Falling back to mock data");
+    
+
+    const mockFlights = [];
+    
+    const airlines = [
+      { code: "AI", name: "Air India" },
+      { code: "6E", name: "IndiGo" },
+      { code: "UK", name: "Vistara" },
+      { code: "SG", name: "SpiceJet" },
+      { code: "G8", name: "Go First" }
+    ];
+    
+    for (let i = 0; i < 15; i++) {
+      const airlineIdx = i % airlines.length;
+      const hourOffset = 7 + (i * 1); // Spread flights throughout the day
+      
+      mockFlights.push({
+        id: `mock-${i+1}`,
+        airline: airlines[airlineIdx].code,
+        airlineName: airlines[airlineIdx].name,
+        flightNumber: `${airlines[airlineIdx].code} ${1000 + i}`,
+        departure: {
+          iataCode: origin,
+          time: `${String(hourOffset).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
+          date: date,
+          terminal: ["1", "2", "3"][Math.floor(Math.random() * 3)],
+          gate: `${String.fromCharCode(65 + Math.floor(Math.random() * 8))}${Math.floor(Math.random() * 30) + 1}`
+        },
+        arrival: {
+          iataCode: destination,
+          time: `${String(hourOffset + 2).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
+          date: date,
+          terminal: ["1", "2", "3"][Math.floor(Math.random() * 3)],
+          gate: `${String.fromCharCode(65 + Math.floor(Math.random() * 8))}${Math.floor(Math.random() * 30) + 1}`
+        },
+        duration: "2h 15m",
+        stops: 0,
+        aircraft: {
+          type: "Boeing 737-800",
+          totalSeats: 162,
+          configuration: "3-3"
+        },
+        basePrice: String(4500 + Math.floor(Math.random() * 3000)),
+        inflatedPrice: String((4500 + Math.floor(Math.random() * 3000)) * 1.12),
+        currency: "INR",
+        cabinClass: travelClass || "ECONOMY",
+        baggage: {
+          included: "15kg",
+          options: [
+            { weight: "25kg", price: "1500" },
+            { weight: "35kg", price: "2500" }
+          ]
+        },
+        fareType: "PUBLISHED",
+        amenities: ["WiFi", "Entertainment"],
+        seatMap: generateSeatMap("Boeing 737-800"),
+        mealOptions: generateMealOptions(airlines[airlineIdx].code)
+      });
+    }
+    
+    res.json(mockFlights);
+  }
 });
 
 module.exports = router;
