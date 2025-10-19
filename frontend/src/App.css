@@ -1,0 +1,538 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f5f6fa;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Navbar */
+nav {
+  background-color: #003580;
+  color: white;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 100;
+  padding: 0.8rem 0;
+}
+
+.navbar-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+nav h1 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-links button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.nav-links button:hover {
+  color: #febb02;
+}
+
+.login-btn {
+  background-color: #febb02;
+  color: #003580;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.login-btn:hover {
+  background-color: #fecd3e;
+}
+/* Profile Dropdown Section */
+.profile-section {
+  position: relative; /* Positioning context for the dropdown */
+}
+
+.profile-icon {
+  background-color: #febb02;
+  border-radius: 50%;
+  width: 42px; /* Slightly larger for better visibility */
+  height: 42px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: #003580; /* Color for the SVG icon */
+  border: 2px solid white;
+  transition: transform 0.2s ease;
+}
+
+.profile-icon:hover {
+  transform: scale(1.1);
+}
+
+.profile-menu {
+  position: absolute;
+  top: 55px; /* Position below the icon */
+  right: 0;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); /* Softer, more modern shadow */
+  padding: 0.5rem 0; /* Vertical padding */
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  min-width: 240px;
+  border: 1px solid #eee;
+  opacity: 0; /* Hidden by default for animation */
+  transform: translateY(-10px);
+  animation: fadeInDown 0.2s ease forwards;
+}
+
+/* Upward-pointing arrow for the dropdown */
+.profile-menu::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  right: 15px;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid white;
+}
+
+.profile-menu .user-info {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 0.5rem;
+}
+
+.profile-menu .user-info strong {
+  color: #003580;
+}
+
+.profile-menu p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #555;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.profile-menu button {
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  padding: 0.75rem 1rem; /* Better padding for buttons */
+  color: #333; /* Darker text for readability */
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.profile-menu button:hover {
+  background-color: #f5f6fa; /* Subtle hover effect */
+  color: #003580;
+}
+
+.logout-btn {
+  color: #d9534f !important; /* Red color for logout */
+  font-weight: bold;
+  border-top: 1px solid #eee;
+  margin-top: 0.5rem;
+}
+
+/* Animation for the dropdown */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* Hero Section */
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;   /* vertically centered */
+  align-items: center;       /* horizontally centered */
+  text-align: center;
+  height: 100vh;             /* full viewport height */
+  width: 100%;
+  margin-top: 0;             /* no offset since we'll handle overlay */
+  overflow: hidden;
+
+  /* Background image with gradient overlay */
+  background: 
+    linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.6)),
+    url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1920&q=80")
+    center/cover no-repeat;
+}
+
+.hero-text {
+  max-width: 700px;
+  margin: 0 auto;
+  z-index: 2;
+}
+
+.hero h2 {
+  font-size: 2.8rem;
+  color: #003580;
+  margin-bottom: 1rem;
+  font-weight: 800;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+.hero button {
+  padding: 0.9rem 1.8rem;
+  background-color: #febb02;
+  border: none;
+  color: #003580;
+  font-weight: bold;
+  font-size: 1.1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.hero button:hover {
+  background-color: #fecd3e;
+  transform: translateY(-2px);
+}
+
+/* Sections */
+section {
+  padding: 3rem 2rem;
+  background-color: white;
+}
+
+/* Section headings */
+section h3 {
+  font-size: 1.8rem;
+  color: #003580;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* --- UPDATED STYLES START HERE --- */
+
+/* Popular Travel Plans */
+.plans {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding: 1rem; /* Added padding for a better look */
+  scrollbar-width: thin;
+}
+
+/* For Chrome/Safari */
+.plans::-webkit-scrollbar {
+  height: 8px;
+}
+.plans::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
+
+.plan-card {
+  min-width: 280px; /* Increased width slightly */
+  flex: 0 0 280px;   /* Added flex property */
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden; /* Important for the image */
+}
+
+.plan-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* This new rule styles the actual image tag */
+.plan-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+/* These rules style the text inside the card */
+.plan-card h4,
+.plan-card p {
+  padding: 0 1rem;
+  margin: 0.5rem 0;
+}
+.plan-card h4 {
+  margin-top: 1rem;
+}
+.plan-card p {
+  margin-bottom: 1rem;
+  color: #666;
+}
+
+/* --- UPDATED STYLES END HERE --- */
+
+/* Hotels Grid */
+.hotels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+.hotel-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 0.8rem;
+}
+
+.hotel-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.hotel-card .image {
+  height: 180px;
+  background: #ccc;
+  border-radius: 6px;
+  margin-bottom: 0.8rem;
+}
+
+.hotel-card button {
+  margin-top: 0.8rem;
+  width: 100%;
+  background-color: #003580;
+  color: white;
+  border: none;
+  padding: 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.hotel-card button:hover {
+  background-color: #002050;
+}
+
+/* Screen Sections - Itinerary, Cart, My Plans */
+.screen-section {
+  padding: 6rem 1rem 3rem;
+  background-color: #f5f6fa;
+  width: 100vw;
+  min-height: calc(100vh - 140px);
+  box-sizing: border-box;
+}
+
+.screen-section h2 {
+  text-align: center;
+  font-size: 2rem;
+  color: #003580;
+  margin-bottom: 2rem;
+}
+
+.screen-cards {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 1rem;
+  width: 100%;
+  padding: 0 1rem;
+  box-sizing: border-box;
+}
+
+.screen-card {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  min-width: 300px;
+  flex: 0 0 auto;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.screen-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.screen-card button {
+  margin-top: 0.8rem;
+  width: 100%;
+  background-color: #003580;
+  color: white;
+  border: none;
+  padding: 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.screen-card button:hover {
+  background-color: #002050;
+}
+
+/* Footer */
+footer {
+  background-color: #002050;
+  color: white;
+  padding: 2rem 0;
+  text-align: center;
+}
+
+/* ---------- Login/Signup Modal (New & Improved) ---------- */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 21, 51, 0.7); /* Darker, on-brand overlay */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px); /* Frosted glass effect */
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.modal-box {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 420px; /* Optimal width for a form */
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+}
+
+.modal-tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 1.5rem;
+}
+
+.modal-tabs button {
+  flex: 1;
+  padding: 0.8rem;
+  background: none;
+  border: none;
+  font-weight: 600; /* Bolder font */
+  font-size: 1.1rem; /* Slightly larger */
+  cursor: pointer;
+  color: #888;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent; /* Placeholder for active border */
+}
+
+.modal-tabs button.active {
+  color: #003580; /* Primary blue for active tab */
+  border-bottom: 3px solid #003580;
+}
+
+.form-container h2 {
+  font-size: 1.8rem;
+  color: #003580;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.form-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.form-container label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.form-container input,
+.form-container select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-container input:focus,
+.form-container select:focus {
+  outline: none;
+  border-color: #febb02; /* Use accent yellow for focus */
+  box-shadow: 0 0 0 3px rgba(254, 187, 2, 0.3);
+}
+
+.login-submit-btn,
+.signup-submit-btn {
+  background-color: #febb02; /* Primary yellow button */
+  color: #003580;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1.1rem;
+  margin-top: 1rem;
+  transition: background-color 0.3s;
+}
+
+.login-submit-btn:hover,
+.signup-submit-btn:hover {
+  background-color: #fecd3e; /* Lighter yellow on hover */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.scrollable-form {
+  overflow-y: auto; /* Adds a vertical scrollbar only when needed */
+  padding-right: 1rem; /* Adds space so the scrollbar doesn't overlap content */
+  flex-grow: 1;
+}

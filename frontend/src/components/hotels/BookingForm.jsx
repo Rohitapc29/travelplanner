@@ -30,6 +30,7 @@ export default function BookingForm() {
           hotel,
           roomType,
           amount: roomType.price,
+          amount: totalAmount,
           checkIn: searchParams.checkIn,
           checkOut: searchParams.checkOut,
           guests: searchParams.guests,
