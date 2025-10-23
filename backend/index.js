@@ -1,14 +1,28 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const connectDB = require('./config/database');
 const flightRoutes = require('./routes/flights');
 const hotelRoutes = require('./hotels/routes/hotelRoutes');
 const airportRoutes = require('./routes/airports');
 const weatherRoutes = require('./routes/weather');
 const bookingRoutes = require('./routes/booking');
 const paymentRoutes = require('./routes/payment');
+const mongoose = require('mongoose');
 
 const app = express();
+
+
+connectDB();
+
+mongoose.connection.once('open', async () => {
+  try {
+    await mongoose.connection.db.admin().ping();
+    console.log('Successfully pinged MongoDB deployment. Connection is alive!');
+  } catch (error) {
+    console.error('Error pinging MongoDB:', error);
+  }
+});
 
 app.use(cors());
 app.use(express.json());
