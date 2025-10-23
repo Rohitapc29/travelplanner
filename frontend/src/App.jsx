@@ -41,68 +41,59 @@ function App() {
   };
 
   // Signup Handler
-  const handleSignup = (e) => {
-    e.preventDefault();
-    const name = e.target.name.value.trim();
-    const email = e.target.email.value.trim();
-    const phone = e.target.phone.value.trim();
-    const password = e.target.password.value;
-    const confirm = e.target.confirm.value;
+  const handleSignup = async (e) => {
+  e.preventDefault();
+  const name = e.target.name.value.trim();
+  const email = e.target.email.value.trim();
+  const phone = e.target.phone.value.trim();
+  const password = e.target.password.value;
+  const confirm = e.target.confirm.value;
 
-    const passwordRegex =
-      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (password !== confirm) return alert("Passwords do not match!");
 
-    if (!passwordRegex.test(password)) {
-      alert(
-        "Password must include at least 8 characters, with letters, numbers, and symbols."
-      );
-      return;
-    }
+  try {
+    const res = await fetch("http://localhost:4000/api/users/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, phone, password, travellerType }),
+    });
 
-    if (password !== confirm) {
-      alert("Passwords do not match.");
-      return;
-    }
+    const data = await res.json();
+    if (!res.ok) return alert(data.message);
 
-    if (!/^[6-9]\d{9}$/.test(phone)) {
-      alert("Please enter a valid 10-digit Indian phone number.");
-      return;
-    }
+    alert("Signup successful!");
+    setIsLogin(true);
+  } catch (err) {
+    console.error(err);
+    alert("Error connecting to server");
+  }
+};
 
-    const newUser = {
-      name,
-      email,
-      phone,
-      travellerType,
-      password,
-      joined: new Date().toLocaleDateString(),
-    };
-    setUsers([...users, newUser]);
-    setAccountCreated(true);
-    setTimeout(() => {
-      setIsLogin(true);
-      setAccountCreated(false);
-    }, 1500);
-  };
 
   // Login Handler
-  const handleLogin = (e) => {
-    e.preventDefault();
-    const email = e.target.email.value.trim();
-    const password = e.target.password.value;
+  const handleLogin = async (e) => {
+  e.preventDefault();
+  const email = e.target.email.value.trim();
+  const password = e.target.password.value;
 
-    const existingUser = users.find(
-      (u) => u.email === email && u.password === password
-    );
+  try {
+    const res = await fetch("http://localhost:4000/api/users/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-    if (!existingUser) {
-      alert("Invalid credentials or user not found!");
-      return;
-    }
+    const data = await res.json();
+    if (!res.ok) return alert(data.message);
 
-    setUser(existingUser);
+    setUser(data.user);
     setShowModal(false);
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Error connecting to server");
+  }
+};
+
 
   // Logout
   const handleLogout = () => {
@@ -111,45 +102,62 @@ function App() {
   };
 
   // Update user profile
-  const updateUserProfile = (newPhone, newTraveller) => {
-    setUser({ ...user, phone: newPhone, travellerType: newTraveller });
-    setUsers(
-      users.map((u) =>
-        u.email === user.email
-          ? { ...u, phone: newPhone, travellerType: newTraveller }
-          : u
-      )
-    );
+  const updateUserProfile = async (newPhone, newTraveller) => {
+  try {
+    const res = await fetch("http://localhost:4000/api/users/update-profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: user.email,
+        phone: newPhone,
+        travellerType: newTraveller,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) return alert(data.message);
+
+    setUser(data.user); // update frontend state with backend's latest
     alert("Profile updated!");
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Error updating profile");
+  }
+};
 
   // Change password
-  const changePassword = (current, newPass, confirm) => {
-    if (current !== user.password) {
-      alert("Current password incorrect!");
-      return;
-    }
-    if (newPass !== confirm) {
-      alert("New passwords do not match!");
-      return;
-    }
-    const passwordRegex =
-      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordRegex.test(newPass)) {
-      alert(
-        "Password must include at least 8 characters, with letters, numbers, and symbols."
-      );
-      return;
-    }
+const changePassword = async (current, newPass, confirm) => {
+  if (newPass !== confirm) {
+    alert("New passwords do not match!");
+    return;
+  }
 
-    setUser({ ...user, password: newPass });
-    setUsers(
-      users.map((u) =>
-        u.email === user.email ? { ...u, password: newPass } : u
-      )
-    );
-    alert("Password changed successfully!");
-  };
+  try {
+    console.log("Sending change password request:", { email: user.email, current, newPass });
+
+    const res = await fetch("http://localhost:4000/api/users/change-password", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: user.email,
+        current,
+        newPass,
+      }),
+    });
+
+    console.log("Response object:", res);
+
+    const data = await res.json();
+    console.log("Response data:", data);
+
+    if (!res.ok) return alert(data.message);
+    alert(data.message);
+  } catch (err) {
+    console.error("Fetch error:", err);
+    alert("Error connecting to server");
+  }
+};
+
 
   // MyProfile Component
   const MyProfile = () => {
@@ -216,60 +224,69 @@ function App() {
       alert("Settings saved!");
     };
 
-    return (
-      <div className="screen-section">
-        <h2>Settings</h2>
-        <div
-          className="screen-card"
-          style={{ maxWidth: "400px", margin: "0 auto" }}
-        >
-          <h3>Change Password</h3>
-          <input
-            type="password"
-            placeholder="Current Password"
-            value={current}
-            onChange={(e) => setCurrent(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="New Password"
-            value={newPass}
-            onChange={(e) => setNewPass(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Confirm New Password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-          />
-          <button onClick={() => changePassword(current, newPass, confirm)}>
-            Change Password
-          </button>
+   return (
+  <div className="screen-section">
+    <h2>Settings</h2>
+    <div
+      className="screen-card"
+      style={{ maxWidth: "400px", margin: "0 auto" }}
+    >
+      <h3>Change Password</h3>
+      <input
+        type="password"
+        placeholder="Current Password"
+        value={current}
+        onChange={(e) => setCurrent(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="New Password"
+        value={newPass}
+        onChange={(e) => setNewPass(e.target.value)}
+      />
+      <input
+        type="password"
+        placeholder="Confirm New Password"
+        value={confirm}
+        onChange={(e) => setConfirm(e.target.value)}
+      />
+      <button
+        type="button" // prevents form submission / page reload
+        onClick={() => changePassword(current, newPass, confirm)}
+      >
+        Change Password
+      </button>
 
-          <h3>Notifications</h3>
-          <label>
-            <input
-              type="checkbox"
-              checked={notif}
-              onChange={() => setNotif(!notif)}
-            />
-            Receive travel deals & itinerary reminders
-          </label>
+      <h3>Notifications</h3>
+      <label>
+        <input
+          type="checkbox"
+          checked={notif}
+          onChange={() => setNotif(!notif)}
+        />
+        Receive travel deals & itinerary reminders
+      </label>
 
-          <h3>Privacy Settings</h3>
-          <label>
-            <input
-              type="checkbox"
-              checked={privacy}
-              onChange={() => setPrivacy(!privacy)}
-            />
-            Show my contact number & traveller type to others
-          </label>
+      <h3>Privacy Settings</h3>
+      <label>
+        <input
+          type="checkbox"
+          checked={privacy}
+          onChange={() => setPrivacy(!privacy)}
+        />
+        Show my contact number & traveller type to others
+      </label>
 
-          <button onClick={handleSettingsSave}>Save Settings</button>
-        </div>
-      </div>
-    );
+      <button
+        type="button"
+        onClick={handleSettingsSave}
+      >
+        Save Settings
+      </button>
+    </div>
+  </div>
+);
+
   };
 
   return (

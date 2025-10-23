@@ -29,7 +29,7 @@ export default function BookingForm() {
         body: JSON.stringify({
           hotel,
           roomType,
-          amount: roomType.price,
+         // amount: roomType.price,
           amount: totalAmount,
           checkIn: searchParams.checkIn,
           checkOut: searchParams.checkOut,
