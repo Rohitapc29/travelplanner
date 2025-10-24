@@ -1,7 +1,13 @@
 import React, { useState } from "react";
+<<<<<<< HEAD
 import "./Itinerary.css";
 import ItineraryPlanner from "./ItineraryPlanner";
 
+=======
+import "./Itinerary.css";  // separate styling
+
+// --- Sample data for Indian destinations ---
+>>>>>>> 0b7aff1100046d3c5efb7d9031765494edd5132b
 const destinations = [
   { id: 1, name: "Goa", image: "https://seoimgak.mmtcdn.com/blog/sites/default/files/goa-quick-guide.jpg" },
   { id: 2, name: "Jaipur", image: "https://hldak.mmtcdn.com/prod-s3-hld-hpcmsadmin/holidays/images/cities/3769/Marvellous%20doorways%20in%20Amer%20Fort.jpg?downsize=328:200" },
@@ -20,6 +26,10 @@ const destinations = [
   { id: 15, name: "Udaipur", image: "https://hldak.mmtcdn.com/prod-s3-hld-hpcmsadmin/holidays/images/cities/1325/Udaipur3.jpg?downsize=328:200" },
 ];
 
+<<<<<<< HEAD
+=======
+// --- Example itineraries for each destination ---
+>>>>>>> 0b7aff1100046d3c5efb7d9031765494edd5132b
 const itinerariesData = {
   Goa: [
     { id: 1, name: "Beach Relaxation Trip", days: 4, cost: "₹12,000", details: ["Day 1: Baga Beach", "Day 2: Fort Aguada", "Day 3: Water Sports", "Day 4: Old Goa Churches"] },
@@ -31,18 +41,26 @@ const itinerariesData = {
     { id: 2, name: "Shopping & Food Walk", days: 2, cost: "₹8,000", details: ["Day 1: Johari Bazaar", "Day 2: Rajasthani Thali"] },
     { id: 3, name: "Jaipur Forts Trip", days: 4, cost: "₹14,000", details: ["Day 1: Nahargarh", "Day 2: Jaigarh", "Day 3: Amber", "Day 4: City Palace"] }
   ],
+<<<<<<< HEAD
+=======
+  // ⚡ Add itineraries for other locations here (similar format)
+>>>>>>> 0b7aff1100046d3c5efb7d9031765494edd5132b
 };
 
 function Itinerary() {
   const [search, setSearch] = useState("");
   const [selectedDestination, setSelectedDestination] = useState(null);
   const [selectedItinerary, setSelectedItinerary] = useState(null);
+<<<<<<< HEAD
   const [showPlanner, setShowPlanner] = useState(false);
+=======
+>>>>>>> 0b7aff1100046d3c5efb7d9031765494edd5132b
 
   const filteredDestinations = destinations.filter((d) =>
     d.name.toLowerCase().includes(search.toLowerCase())
   );
 
+<<<<<<< HEAD
   // if planner mode, render ItineraryPlanner instead
   if (showPlanner) {
     return (
@@ -53,6 +71,11 @@ function Itinerary() {
   return (
     <div className="screen-section">
       {/* 🔍 Search Bar + Create Button */}
+=======
+  return (
+    <div className="screen-section">
+      {/* Search Bar */}
+>>>>>>> 0b7aff1100046d3c5efb7d9031765494edd5132b
       <div className="search-bar big">
         <input
           type="text"
@@ -60,9 +83,12 @@ function Itinerary() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+<<<<<<< HEAD
         <button className="flashy-btn" onClick={() => setShowPlanner(true)}>
           ✨ Create your own!
         </button>
+=======
+>>>>>>> 0b7aff1100046d3c5efb7d9031765494edd5132b
       </div>
 
       {/* Destination Grid */}

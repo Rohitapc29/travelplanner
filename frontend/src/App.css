@@ -535,6 +535,7 @@ footer {
   overflow-y: auto; /* Adds a vertical scrollbar only when needed */
   padding-right: 1rem; /* Adds space so the scrollbar doesn't overlap content */
   flex-grow: 1;
+<<<<<<< HEAD
 }
 
 
@@ -883,3 +884,6 @@ body {
   .hour-label { width: 48px; font-size: 0.8rem; }
   .planner-controls { flex-direction: column; align-items:flex-start; gap:10px; }
 }
+=======
+}
+>>>>>>> 0b7aff1100046d3c5efb7d9031765494edd5132b
