@@ -883,3 +883,47 @@ body {
   .hour-label { width: 48px; font-size: 0.8rem; }
   .planner-controls { flex-direction: column; align-items:flex-start; gap:10px; }
 }
+
+.auth-required-message {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.auth-required-message p {
+  margin: 0;
+  color: #856404;
+  font-weight: 500;
+}
+
+.auth-required-message {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.auth-required-message p {
+  margin: 0;
+  color: #856404;
+  font-weight: 500;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.loading-spinner {
+  font-size: 18px;
+  color: #007bff;
+  font-weight: 500;
+}
