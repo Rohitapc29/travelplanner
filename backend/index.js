@@ -11,9 +11,9 @@ const airportRoutes = require('./routes/airports');
 const weatherRoutes = require('./routes/weather');
 const bookingRoutes = require('./routes/booking');
 const paymentRoutes = require('./routes/payment');
-
-// New: user routes
 const userRoutes = require('./routes/userRoutes');
+
+const planRoutes = require('./routes/plans');
 
 const app = express();
 
@@ -49,8 +49,8 @@ app.use('/api/weather', weatherRoutes);
 app.use('/api/booking/payment', paymentRoutes);
 app.use('/api/booking', bookingRoutes);
 
-// 🟢 Add this line
-app.use('/api/users', userRoutes);
+app.use('/api/plans', planRoutes);
+app.use('/api/users', userRoutes);  
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

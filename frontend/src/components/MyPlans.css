@@ -1,0 +1,180 @@
+.plans-section {
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+  margin-top: 30px;
+}
+
+.plan-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.plan-card:hover {
+  transform: translateY(-5px);
+}
+
+.plan-thumbnail {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.plan-thumbnail.placeholder {
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2em;
+}
+
+.plan-content {
+  padding: 20px;
+}
+
+.plan-content h3 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+}
+
+.plan-meta {
+  display: flex;
+  gap: 10px;
+  color: #666;
+  font-size: 0.9em;
+  margin-bottom: 15px;
+}
+
+.view-plan-btn {
+  width: 100%;
+  padding: 10px;
+  background: #003580;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.view-plan-btn:hover {
+  background: #00224f;
+}
+
+.loading, .no-plans {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.itinerary-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.day-schedule {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.day-schedule h3 {
+  color: #003580;
+  margin-bottom: 16px;
+}
+
+.attractions-list {
+  display: grid;
+  gap: 16px;
+}
+
+.attraction-item {
+  display: flex;
+  gap: 16px;
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.attraction-item img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.attraction-details {
+  flex: 1;
+}
+
+.attraction-details h4 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+}
+
+.attraction-details p {
+  margin: 0 0 8px 0;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.attraction-details span {
+  color: #003580;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.attraction-meta {
+  display: flex;
+  gap: 15px;
+  margin-top: 8px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.attraction-meta span {
+  background: rgba(0,0,0,0.05);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
