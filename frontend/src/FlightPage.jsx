@@ -19,20 +19,50 @@ export default function FlightPage() {
   const [originSuggestions, setOriginSuggestions] = useState([]);
   const [destSuggestions, setDestSuggestions] = useState([]);
 
+  // --- STYLES ---
+  const inputStyle = {
+    padding: "12px",
+    fontSize: "14px",
+    border: "1px solid #ccc",
+    borderRadius: "4px",
+    boxSizing: "border-box", 
+    minWidth: "180px",
+    height: "46px", 
+  };
+
+  const buttonStyle = {
+    padding: "12px 20px",
+    fontSize: "14px",
+    fontWeight: "bold",
+    backgroundColor: "#007bff",
+    color: "white",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    height: "46px", 
+  };
+
+  const disabledButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: "#ccc",
+    cursor: "not-allowed",
+  };
+  // --- END STYLES ---
+
   const update = (key, value) => setFilters({ ...filters, [key]: value });
 
   const searchAirports = async (keyword, type) => {
     if (keyword.length < 2) {
-      if (type === 'origin') setOriginSuggestions([]);
+      if (type === "origin") setOriginSuggestions([]);
       else setDestSuggestions([]);
       return;
     }
-    
+
     try {
       const res = await axios.get("http://localhost:4000/api/airports/search", {
-        params: { keyword }
+        params: { keyword },
       });
-      if (type === 'origin') setOriginSuggestions(res.data);
+      if (type === "origin") setOriginSuggestions(res.data);
       else setDestSuggestions(res.data);
     } catch (err) {
       console.error("Airport search failed:", err);
@@ -41,7 +71,7 @@ export default function FlightPage() {
 
   const selectAirport = (airport, type) => {
     update(type, airport.iataCode);
-    if (type === 'origin') setOriginSuggestions([]);
+    if (type === "origin") setOriginSuggestions([]);
     else setDestSuggestions([]);
   };
 
@@ -77,162 +107,224 @@ export default function FlightPage() {
     if (bookingData && selectedSeat) {
       setBookingData({
         ...bookingData,
-        selectedSeat: selectedSeat
+        selectedSeat: selectedSeat,
       });
     }
   };
 
   if (showServices) {
-    return <ServicesPage 
-      booking={bookingData} 
-      flight={selectedFlight}
-      onBack={() => {
-        setShowServices(false);
-        setShowSeatMap(true);
-      }}
-    />;
+    return (
+      <ServicesPage
+        booking={bookingData}
+        flight={selectedFlight}
+        onBack={() => {
+          setShowServices(false);
+          setShowSeatMap(true);
+        }}
+      />
+    );
   }
 
   if (showSeatMap) {
-    return <SeatMapPage 
-      booking={bookingData} 
-      flight={selectedFlight}
-      onBack={() => {
-        setShowSeatMap(false);
-        setShowBookingForm(true);
-      }}
-      onProceedToServices={proceedToServices}
-    />;
+    return (
+      <SeatMapPage
+        booking={bookingData}
+        flight={selectedFlight}
+        onBack={() => {
+          setShowSeatMap(false);
+          setShowBookingForm(true);
+        }}
+        onProceedToServices={proceedToServices}
+      />
+    );
   }
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>Search Flights ✈️</h2>
-      
+      <h2
+        style={{ marginTop: "20px", marginBottom: "20px", textAlign: "center" }}
+      >
+        Search Flights ✈️
+      </h2>
+
       {!showBookingForm ? (
         <>
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: 20 }}>
+          <div
+            style={{
+              display: "flex",
+              gap: "10px",
+              flexWrap: "wrap",
+              marginBottom: 20,
+              padding: "20px",
+              backgroundColor: "#daf2f1ff", // Changed back to white as per your screenshot
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.08)", // Slightly enhanced shadow
+              alignItems: "center", 
+              justifyContent: "center", 
+            }}
+          >
+            {/* Origin Input */}
             <div style={{ position: "relative" }}>
               <input
                 placeholder="Origin (e.g., Mumbai)"
                 value={filters.origin}
                 onChange={(e) => {
                   update("origin", e.target.value);
-                  searchAirports(e.target.value, 'origin');
+                  searchAirports(e.target.value, "origin");
                 }}
-                style={{ padding: "8px", width: "200px" }}
+                style={{ ...inputStyle, width: "200px" }} 
               />
               {originSuggestions.length > 0 && (
-                <div style={{ 
-                  position: "absolute", 
-                  background: "white", 
-                  border: "1px solid #ccc", 
-                  zIndex: 10, 
-                  width: "100%",
-                  maxHeight: "200px",
-                  overflow: "auto"
-                }}>
+                <div
+                  style={{
+                    position: "absolute",
+                    background: "white",
+                    border: "1px solid #ccc",
+                    zIndex: 10,
+                    width: "100%",
+                    maxHeight: "200px",
+                    overflow: "auto",
+                  }}
+                >
                   {originSuggestions.map((airport, index) => (
-                    <div 
+                    <div
                       key={`origin-${airport.iataCode}-${index}`}
-                      style={{ 
-                        padding: "8px", 
-                        cursor: "pointer", 
+                      style={{
+                        padding: "8px",
+                        cursor: "pointer",
                         borderBottom: "1px solid #eee",
-                        fontSize: "14px"
+                        fontSize: "14px",
                       }}
-                      onClick={() => selectAirport(airport, 'origin')}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                      onClick={() => selectAirport(airport, "origin")}
+                      onMouseEnter={(e) =>
+                        (e.target.style.backgroundColor = "#f0f0f0")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.target.style.backgroundColor = "white")
+                      }
                     >
-                      <strong>{airport.iataCode}</strong> - {airport.name}<br/>
-                      <small>{airport.city}, {airport.country}</small>
+                      <strong>{airport.iataCode}</strong> - {airport.name}
+                      <br />
+                      <small>
+                        {airport.city}, {airport.country}
+                      </small>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
+            {/* Destination Input */}
             <div style={{ position: "relative" }}>
               <input
                 placeholder="Destination (e.g., Delhi)"
                 value={filters.destination}
                 onChange={(e) => {
                   update("destination", e.target.value);
-                  searchAirports(e.target.value, 'dest');
+                  searchAirports(e.target.value, "dest");
                 }}
-                style={{ padding: "8px", width: "200px" }}
+                style={{ ...inputStyle, width: "200px" }} 
               />
               {destSuggestions.length > 0 && (
-                <div style={{ 
-                  position: "absolute", 
-                  background: "white", 
-                  border: "1px solid #ccc", 
-                  zIndex: 10, 
-                  width: "100%",
-                  maxHeight: "200px",
-                  overflow: "auto"
-                }}>
+                <div
+                  style={{
+                    position: "absolute",
+                    background: "white",
+                    border: "1px solid #ccc",
+                    zIndex: 10,
+                    width: "100%",
+                    maxHeight: "200px",
+                    overflow: "auto",
+                  }}
+                >
                   {destSuggestions.map((airport, index) => (
-                    <div 
+                    <div
                       key={`dest-${airport.iataCode}-${index}`}
-                      style={{ 
-                        padding: "8px", 
-                        cursor: "pointer", 
+                      style={{
+                        padding: "8px",
+                        cursor: "pointer",
                         borderBottom: "1px solid #eee",
-                        fontSize: "14px"
+                        fontSize: "14px",
                       }}
-                      onClick={() => selectAirport(airport, 'dest')}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                      onClick={() => selectAirport(airport, "dest")}
+                      onMouseEnter={(e) =>
+                        (e.target.style.backgroundColor = "#f0f0f0")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.target.style.backgroundColor = "white")
+                      }
                     >
-                      <strong>{airport.iataCode}</strong> - {airport.name}<br/>
-                      <small>{airport.city}, {airport.country}</small>
+                      <strong>{airport.iataCode}</strong> - {airport.name}
+                      <br />
+                      <small>
+                        {airport.city}, {airport.country}
+                      </small>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
+            {/* Date Input */}
             <input
               type="date"
+              placeholder="dd-mm-yyyy" // Placeholder isn't really effective on type=date
               value={filters.date}
               onChange={(e) => update("date", e.target.value)}
-              style={{ padding: "8px" }}
+              style={inputStyle} 
             />
+
+            {/* Travel Class Select */}
             <select
               value={filters.travelClass}
               onChange={(e) => update("travelClass", e.target.value)}
-              style={{ padding: "8px" }}
+              style={inputStyle} 
             >
               <option value="ECONOMY">Economy</option>
               <option value="BUSINESS">Business</option>
               <option value="FIRST">First</option>
             </select>
+
+            {/* Airline Input */}
             <input
               placeholder="Airline Code (optional)"
               value={filters.airline}
               onChange={(e) => update("airline", e.target.value.toUpperCase())}
-              style={{ padding: "8px" }}
+              style={inputStyle} 
             />
-            <button onClick={searchFlights} disabled={loading} style={{ padding: "8px 16px" }}>
+
+            {/* Search Button */}
+            <button
+              onClick={searchFlights}
+              disabled={loading}
+              style={loading ? disabledButtonStyle : buttonStyle} 
+            >
               {loading ? "Searching..." : "Search Flights"}
             </button>
           </div>
 
           <hr />
 
+          {/* *** THIS IS THE CHANGED PART ***
+            It now shows <EmptyState /> when flights.length is 0
+          */}
           {flights.length > 0 ? (
             flights.map((f) => (
-              <EnhancedFlightCard key={f.id} flight={f} onSelect={handleSelectFlight} />
+              <EnhancedFlightCard
+                key={f.id}
+                flight={f}
+                onSelect={handleSelectFlight}
+              />
             ))
-          ): (
-            <p>No flights yet. Try searching.</p>
+          ) : (
+            <EmptyState />
           )}
+          {/* *** END OF CHANGE *** */}
+
         </>
       ) : (
-        <BookingForm 
-          flight={selectedFlight} 
+        <BookingForm
+          flight={selectedFlight}
           onBack={() => setShowBookingForm(false)}
           onProceedToSeatMap={proceedToSeatMap}
         />
@@ -240,6 +332,8 @@ export default function FlightPage() {
     </div>
   );
 }
+
+// ... (EnhancedFlightCard, WeatherInfo, BookingForm, SeatMapPage, SeatButton, ServicesPage are all unchanged) ...
 
 function EnhancedFlightCard({ flight, onSelect }) {
   return (
@@ -376,7 +470,6 @@ function WeatherInfo({ cityCode }) {
   );
 }
 
-// Enhanced Booking Form Component
 function BookingForm({ flight, onBack, onProceedToSeatMap }) {
   const [passenger, setPassenger] = useState({
     firstName: "",
@@ -1066,5 +1159,37 @@ function ServicesPage({ booking, flight, onBack }) {
       </div>
     </div>
     
+  );
+}
+
+// 
+// *** THIS IS THE NEW COMPONENT YOU ASKED FOR ***
+//
+// Find this component at the bottom of your FlightPage.js file
+function EmptyState() {
+  return (
+    <div style={{
+      textAlign: 'center',
+      padding: '80px 40px',
+      marginTop: '30px',
+    
+      backgroundColor: '#dbe8f2ff', // A very light blue
+      
+      borderRadius: '8px',
+      border: '1px dashed #a3d9ff', // You might want to match the dashed border to the new background
+      color: '#6c757d'
+    }}>
+      <span style={{ fontSize: '48px', display: 'block', marginBottom: '20px' }}>
+        ✈️
+      </span>
+      <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>
+        Where are you flying to?
+      </h3>
+      <p style={{ margin: 0, fontSize: '16px', lineHeight: '1.5' }}>
+        Use the search form above to find the best flights
+        <br />
+        for your next adventure.
+      </p>
+    </div>
   );
 }
