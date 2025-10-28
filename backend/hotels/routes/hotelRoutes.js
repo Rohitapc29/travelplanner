@@ -4,6 +4,7 @@ const axios = require('axios');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const amadeus = require('../../config/amadeus');
 const { getAmadeusToken } = require('../../utils/amadeus');
+const Payment = require('../../models/Payment');
 
 
 const hotelImages = [
@@ -219,6 +220,11 @@ router.get('/search', async (req, res) => {
       
       console.log(`Making request to Amadeus for hotels in ${cityCode}`);
       
+      console.log('Making Amadeus API request with:', {
+        cityCode,
+        token: token.substring(0, 10) + '...'
+      });
+      
       const response = await axios.get(
         'https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city', 
         {
@@ -226,6 +232,11 @@ router.get('/search', async (req, res) => {
           params: { cityCode: cityCode }
         }
       );
+      
+      console.log('Amadeus API response:', {
+        status: response.status,
+        dataLength: response.data?.data?.length || 0
+      });
       
       if (response.data && response.data.data && response.data.data.length > 0) {
         console.log(`✅ Found ${response.data.data.length} hotels from Amadeus API`);
@@ -395,6 +406,15 @@ router.get('/:hotelId', async (req, res) => {
       }
     } catch (amadeusError) {
       console.error('Amadeus hotel details error:', amadeusError.message);
+      if (amadeusError.response) {
+        console.error('Amadeus error response:', {
+          status: amadeusError.response.status,
+          data: amadeusError.response.data,
+          headers: amadeusError.response.headers
+        });
+      } else if (amadeusError.request) {
+        console.error('No response received from Amadeus');
+      }
     }
     
 
@@ -685,6 +705,29 @@ router.post('/create-checkout-session', async (req, res) => {
         phone
       }
     });
+
+    // Save payment record
+    const payment = new Payment({
+      paymentId: session.id,
+      type: 'hotel',
+      amount: amount,
+      status: 'completed',  // Since it's mock data
+      hotelName: hotel.name,
+      roomType: roomType.type,
+      checkIn: checkIn,
+      checkOut: checkOut,
+      guestName: `${firstName} ${lastName}`,
+      customerEmail: email,
+      customerPhone: phone,
+      metadata: {
+        stripeSessionId: session.id,
+        hotelId: hotel.id || hotel.hotelId,
+        guests: guests.toString()
+      }
+    });
+
+    await payment.save();
+    console.log('Hotel payment record created:', payment.paymentId);
 
     res.json({ url: session.url });
   } catch (error) {

@@ -30,6 +30,11 @@ mongoose.connection.once('open', async () => {
 });
 
 app.use(cors());
+
+// Special raw body parsing for Stripe webhooks
+app.use('/api/webhooks/stripe', require('./routes/webhooks'));
+
+// Regular body parsing for other routes
 app.use(express.json());
 
 // Health check
@@ -50,7 +55,8 @@ app.use('/api/booking/payment', paymentRoutes);
 app.use('/api/booking', bookingRoutes);
 
 app.use('/api/plans', planRoutes);
-app.use('/api/users', userRoutes);  
+app.use('/api/users', userRoutes);
+app.use('/api/admin', require('./routes/adminRoutes'));  
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {

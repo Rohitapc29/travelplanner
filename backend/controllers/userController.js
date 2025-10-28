@@ -56,7 +56,41 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    
+    // Hardcoded admin credentials
+    const ADMIN_EMAIL = 'admin@travelmate.com';
+    const ADMIN_PASSWORD = 'admin123';
+
+    // Check if it's admin login
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+      const adminUser = await User.findOne({ email: ADMIN_EMAIL });
+      
+      if (!adminUser) {
+        // Create admin user if doesn't exist
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, salt);
+        const adminUser = await User.create({
+          name: 'Admin',
+          email: ADMIN_EMAIL,
+          phone: '0000000000',
+          password: hashedPassword,
+          travellerType: 'admin',
+          isAdmin: true
+        });
+      }
+
+      return res.json({
+        user: {
+          _id: adminUser?._id || 'admin',
+          name: 'Admin',
+          email: ADMIN_EMAIL,
+          isAdmin: true,
+          joined: new Date().toLocaleDateString(),
+        },
+        token: generateToken(adminUser?._id || 'admin'),
+      });
+    }
+
+    // Regular user login
     const user = await User.findOne({ email });
 
     if (user && (await bcrypt.compare(password, user.password))) {
@@ -67,6 +101,7 @@ const loginUser = async (req, res) => {
           email: user.email,
           phone: user.phone,
           travellerType: user.travellerType,
+          isAdmin: false,
           joined: user.joined.toLocaleDateString(), 
         },
         token: generateToken(user._id),

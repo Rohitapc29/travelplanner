@@ -9,10 +9,22 @@ export default function SuccessPage() {
   const pnr = searchParams.get('pnr');
 
   useEffect(() => {
-    if (pnr) {
+    const sessionId = searchParams.get('session_id');
+    if (pnr && sessionId) {
+      updatePaymentStatus(sessionId);
+      fetchBookingDetails();
+    } else if (pnr) {
       fetchBookingDetails();
     }
   }, [pnr]);
+
+  const updatePaymentStatus = async (sessionId) => {
+    try {
+      await axios.post('http://localhost:4000/api/booking/payment/success', { sessionId });
+    } catch (err) {
+      console.error("Failed to update payment status:", err);
+    }
+  };
 
   const fetchBookingDetails = async () => {
     setLoading(true);

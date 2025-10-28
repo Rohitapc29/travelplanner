@@ -5,6 +5,7 @@ import Itinerary from "./components/Itinerary";
 import Cart from "./components/Cart";
 import MyPlans from "./components/MyPlans";
 import AppFlightHotel from "./AppFlightHotel";
+import AdminDashboard from "./components/AdminDashboard";
 
 function App() {
   const [page, setPage] = useState("home");
@@ -56,7 +57,10 @@ function App() {
   }, []);
 
   // Protected routes array
-  const protectedRoutes = ["itinerary", "cart", "plans", "myprofile", "settings", "flighthotels"];
+  const protectedRoutes = ["itinerary", "cart", "plans", "myprofile", "settings", "flighthotels", "admin"];
+  
+  // Admin only routes
+  const adminRoutes = ["admin"];
 
   const requiresAuth = (routeName) => {
     return protectedRoutes.includes(routeName);
@@ -74,6 +78,10 @@ function App() {
   };
 
   const renderPage = () => {
+    if (user?.isAdmin) {
+      return <AdminDashboard />;
+    }
+
     if (requiresAuth(page) && !user) {
       return <Home />;
     }
@@ -368,14 +376,21 @@ function App() {
       {/* Navbar */}
       <nav>
         <div className="navbar-container">
-          <h1 onClick={() => setPage("home")}>TravelMate</h1>
-          <div className="nav-links">
-            <button onClick={() => setPage("home")}>Home</button>
-            <button onClick={() => navigateTo("itinerary")}>Itinerary</button>
-            <button onClick={() => navigateTo("cart")}>Cart</button>
-            <button onClick={() => navigateTo("plans")}>My Plans</button>
-            <button onClick={() => navigateTo("flighthotels")}>Hotels and Flights</button>
-          </div>
+          <h1 onClick={() => !user?.isAdmin && setPage("home")}>TravelMate</h1>
+          {!user?.isAdmin && (
+            <div className="nav-links">
+              <button onClick={() => setPage("home")}>Home</button>
+              <button onClick={() => navigateTo("itinerary")}>Itinerary</button>
+              <button onClick={() => navigateTo("cart")}>Cart</button>
+              <button onClick={() => navigateTo("plans")}>My Plans</button>
+              <button onClick={() => navigateTo("flighthotels")}>Hotels and Flights</button>
+            </div>
+          )}
+          {user?.isAdmin && (
+            <div className="nav-links">
+              <button disabled style={{ fontWeight: 'bold' }}>Admin Dashboard</button>
+            </div>
+          )}
 
           {user ? (
             <div className="profile-section">
