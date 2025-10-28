@@ -432,22 +432,31 @@ function EnhancedFlightCard({ flight, onSelect }) {
 
 function WeatherInfo({ cityCode }) {
   const [weather, setWeather] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchWeather = async () => {
+    
+      if (!cityCode || cityCode.length !== 3) return;
+      
+      setLoading(true);
       try {
         const res = await axios.get(`http://localhost:4000/api/weather/${cityCode}`);
         setWeather(res.data);
       } catch (err) {
         console.error("Failed to fetch weather:", err);
+        setWeather(null);
+      } finally {
+        setLoading(false);
       }
     };
     
-    if (cityCode) {
+    if (cityCode && cityCode.length === 3) {
       fetchWeather();
     }
   }, [cityCode]);
 
+  if (loading) return <div style={{ fontSize: "12px", color: "#666" }}>Loading weather...</div>;
   if (!weather) return null;
 
   return (
@@ -492,14 +501,25 @@ function BookingForm({ flight, onBack, onProceedToSeatMap }) {
 
     setLoading(true);
     try {
+     
+      const loggedInUser = JSON.parse(localStorage.getItem('user'));
+      
+      console.log('Logged in user:', loggedInUser);
+      
       const bookingData = {
         flightOffer: flight,
         passengers: [passenger],
         contactInfo: {
           email: passenger.email,
           phone: passenger.phone
-        }
+        },
+        userEmail: loggedInUser?.email || null
       };
+
+      console.log('Booking data being sent:', {
+        userEmail: bookingData.userEmail,
+        contactEmail: bookingData.contactInfo.email
+      });
 
       const bookingRes = await axios.post("http://localhost:4000/api/booking/create", bookingData);
       

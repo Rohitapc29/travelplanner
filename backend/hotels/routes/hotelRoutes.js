@@ -5,6 +5,8 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const amadeus = require('../../config/amadeus');
 const { getAmadeusToken } = require('../../utils/amadeus');
 const Payment = require('../../models/Payment');
+const Booking = require('../../models/Booking');
+const User = require('../../models/User');
 
 
 const hotelImages = [
@@ -733,6 +735,57 @@ router.post('/create-checkout-session', async (req, res) => {
   } catch (error) {
     console.error('Stripe session creation error:', error);
     res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+});
+
+router.post('/book', async (req, res) => {
+  try {
+    const { hotel, roomType, checkIn, checkOut, guests, contactInfo, userEmail, totalAmount } = req.body;
+
+    const pnr = 'HT' + Math.random().toString(36).substr(2, 6).toUpperCase();
+
+    if (userEmail) {
+      try {
+        const user = await User.findOne({ email: userEmail });
+        if (user) {
+          const checkInDate = new Date(checkIn);
+          const checkOutDate = new Date(checkOut);
+          const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+
+          const dbBooking = new Booking({
+            userId: user._id,
+            bookingType: 'hotel',
+            pnr: pnr,
+            status: 'CONFIRMED',
+            totalAmount: totalAmount,
+            hotelDetails: {
+              hotelName: hotel.name,
+              roomType: roomType.type,
+              checkIn: checkIn,
+              checkOut: checkOut,
+              nights: nights,
+              guests: guests,
+              location: hotel.address?.cityName || 'N/A'
+            },
+            contactInfo: contactInfo
+          });
+
+          await dbBooking.save();
+          console.log('booking saved to db:', pnr);
+        }
+      } catch (dbError) {
+        console.error('Error saving hotel booking to DB:', dbError);
+      }
+    }
+
+    res.json({
+      success: true,
+      pnr: pnr,
+      message: 'Hotel booking created successfully'
+    });
+  } catch (error) {
+    console.error('Hotel booking error:', error);
+    res.status(500).json({ error: 'Hotel booking failed' });
   }
 });
 

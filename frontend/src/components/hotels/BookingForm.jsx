@@ -21,15 +21,35 @@ export default function BookingForm() {
     setError(null);
 
     try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      
+      if (user?.email) {
+        try {
+          await fetch('http://localhost:4000/api/hotels/book', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              hotel,
+              roomType,
+              checkIn: searchParams.checkIn,
+              checkOut: searchParams.checkOut,
+              guests: searchParams.guests,
+              contactInfo: formData,
+              userEmail: user.email,
+              totalAmount
+            }),
+          });
+        } catch (dbError) {
+          console.error('Error saving hotel booking:', dbError);
+        }
+      }
+
       const response = await fetch('http://localhost:4000/api/hotels/create-checkout-session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           hotel,
           roomType,
-         // amount: roomType.price,
           amount: totalAmount,
           checkIn: searchParams.checkIn,
           checkOut: searchParams.checkOut,

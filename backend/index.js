@@ -14,6 +14,7 @@ const paymentRoutes = require('./routes/payment');
 const userRoutes = require('./routes/userRoutes');
 
 const planRoutes = require('./routes/plans');
+const newBookingRoutes = require('./routes/bookingRoutes');
 
 const app = express();
 
@@ -53,6 +54,7 @@ app.use('/api/airports', airportRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/booking/payment', paymentRoutes);
 app.use('/api/booking', bookingRoutes);
+app.use('/api/bookings', newBookingRoutes);
 
 app.use('/api/plans', planRoutes);
 app.use('/api/users', userRoutes);

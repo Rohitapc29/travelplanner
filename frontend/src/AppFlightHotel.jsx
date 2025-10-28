@@ -12,15 +12,15 @@ import BookingForm from "./components/hotels/BookingForm";
 
 function AppFlightHotel({ navigateToMainApp }) {
   return (
-    <Router>
-      <div>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Router>
         <nav
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "flex-start",
             padding: "14px 40px",
-            backgroundColor: "#003580", // Booking.com deep blue
+            backgroundColor: "#003580",
             borderBottom: "2px solid #00224f",
             boxShadow: "0 2px 6px rgba(0, 0, 0, 0.15)",
           }}
@@ -88,18 +88,20 @@ function AppFlightHotel({ navigateToMainApp }) {
           )}
         </nav>
 
-        <Routes>
-          <Route path="/flights" element={<FlightPage />} />
-          <Route path="/success" element={<SuccessPage />} />
-          <Route path="/booking-lookup" element={<BookingLookup />} />
-          <Route path="/hotels" element={<HotelSearch />} />
-          <Route path="/hotels/results" element={<HotelList />} />
-          <Route path="/hotels/:id" element={<HotelDetail />} />
-          <Route path="/hotels/:id/booking" element={<BookingForm />} />
-          <Route path="/" element={<HomePage />} />
-        </Routes>
-      </div>
-    </Router>
+        <div style={{ flex: 1 }}>
+          <Routes>
+            <Route path="/flights" element={<FlightPage />} />
+            <Route path="/success" element={<SuccessPage />} />
+            <Route path="/booking-lookup" element={<BookingLookup />} />
+            <Route path="/hotels" element={<HotelSearch />} />
+            <Route path="/hotels/results" element={<HotelList />} />
+            <Route path="/hotels/:id" element={<HotelDetail />} />
+            <Route path="/hotels/:id/booking" element={<BookingForm />} />
+            <Route path="/" element={<HomePage />} />
+          </Routes>
+        </div>
+      </Router>
+    </div>
   );
 }
 

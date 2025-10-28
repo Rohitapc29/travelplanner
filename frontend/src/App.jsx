@@ -26,10 +26,20 @@ function App() {
   useEffect(() => {
     const checkAuthStatus = async () => {
       const token = localStorage.getItem('token');
+      const userData = localStorage.getItem('user'); 
       
       if (token) {
+        if (userData) {
+          try {
+            setUser(JSON.parse(userData));
+            setIsLoading(false);
+            return;
+          } catch (error) {
+            console.error('Error parsing user data:', error);
+            localStorage.removeItem('user');
+          }
+        }
         try {
-          
           const res = await fetch("http://localhost:4000/api/users/verify-token", {
             method: "GET",
             headers: {
@@ -40,13 +50,15 @@ function App() {
           if (res.ok) {
             const data = await res.json();
             setUser(data.user);
+            localStorage.setItem('user', JSON.stringify(data.user)); 
           } else {
-            
             localStorage.removeItem('token');
+            localStorage.removeItem('user'); 
           }
         } catch (error) {
           console.error('Error verifying token:', error);
           localStorage.removeItem('token');
+          localStorage.removeItem('user');
         }
       }
       
@@ -125,16 +137,19 @@ function App() {
       const data = await res.json();
       if (!res.ok) return alert(data.message);
 
-      localStorage.setItem('token', data.token);
-      setUser({
+      const userObj = {
         _id: data._id,
         name: data.name,
         email: data.email,
         phone: data.phone,
         travellerType: data.travellerType,
         joined: data.joined
-      });
+      };
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(userObj)); 
       
+      setUser(userObj);
       setShowModal(false);
       alert("Signup successful!");
     } catch (err) {
@@ -157,9 +172,19 @@ function App() {
       });
 
       const data = await res.json();
+      
+
+      console.log('LOGIN RESPONSE:', data);
+      console.log('Token', data.token);
+      console.log('User', data.user);
+      
       if (!res.ok) return alert(data.message);
 
       localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      console.log('Stored token:', localStorage.getItem('token'));
+      console.log('Stored user:', localStorage.getItem('user'));
       
       setUser(data.user);
       setShowModal(false);
@@ -229,6 +254,7 @@ function App() {
  
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
     setShowProfileMenu(false);
     setPage("home");
