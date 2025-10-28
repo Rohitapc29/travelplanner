@@ -98,7 +98,7 @@ function App() {
       case "settings":
         return <Settings />;
       case "flighthotels":
-        return <AppFlightHotel />;
+        return <AppFlightHotel navigateToMainApp={navigateTo} />;
       default:
         return <Home />;
     }
