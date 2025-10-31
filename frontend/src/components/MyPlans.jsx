@@ -11,7 +11,6 @@ const getPlans = async () => {
       return [];
     }
     
-    console.log('Fetching plans ');
     
     const response = await fetch(`${API_BASE_URL}/plans`, {
       headers: { 
@@ -20,14 +19,12 @@ const getPlans = async () => {
       }
     });
     
-    console.log('Plans', response.status);
-    
     if (response.ok) {
       const data = await response.json();
-      console.log('Raw plans:', data);
+      
       
       const plansArray = Array.isArray(data) ? data : (data.plans || []);
-      console.log('Processed :', plansArray, 'Length:', plansArray.length);
+      
       
       return plansArray;
     } else {
@@ -75,31 +72,24 @@ function MyPlans() {
           
           if (bookingResponse.ok) {
             const bookingData = await bookingResponse.json();
-            console.log('Bookings loaded:', bookingData.bookings?.length || 0);
             setBookings(bookingData.bookings || []);
-          } else {
-            console.error('Failed to load bookings:', await bookingResponse.text());
+          } 
+          else {
             setBookings([]);
           }
         } catch (bookingError) {
-          console.error('Booking fetch error:', bookingError);
           setBookings([]);
         }
       }
 
-
       try {
-        console.log('Loading travel plans...');
         const fetchedPlans = await getPlans();
-        console.log("Final plans loaded:", fetchedPlans); 
         setPlans(fetchedPlans || []);
       } catch (planError) {
-        console.error('Plans fetch error:', planError);
         setPlans([]);
       }
       
     } catch (error) {
-      console.error("Error in loadData:", error);
       setBookings([]);
       setPlans([]);
     } finally {
@@ -107,83 +97,25 @@ function MyPlans() {
     }
   };
 
-  const handlePlanSelect = (plan) => {
-    console.log("Selected plan details:", plan); 
-    setSelectedPlan(plan);
+  const getTotalAttractions = (plan) => {
+    if (!plan.schedule || !Array.isArray(plan.schedule)) return 0;
+    return plan.schedule.reduce((total, day) => {
+      return total + (day.attractions ? day.attractions.length : 0);
+    }, 0);
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return 'Invalid Date';
+    }
   };
-
-  const ItineraryModal = ({ plan, onClose }) => (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="itinerary-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>
-          ×
-        </button>
-        <h2>
-          {plan.destination} - {plan.numDays} Days
-        </h2>
-
-        <div className="itinerary-content">
-          {plan.schedule && Array.isArray(plan.schedule) ? (
-            plan.schedule.map((day, dayIndex) => (
-              <div key={dayIndex} className="day-schedule">
-                <h3>Day {dayIndex + 1}</h3>
-                <div className="attractions-list">
-                  {day.attractions && Array.isArray(day.attractions) ? (
-                    day.attractions
-                      .sort((a, b) => {
-                        // Sort by start time
-                        const timeA = parseInt(a.startTime.split(":")[0]);
-                        const timeB = parseInt(b.startTime.split(":")[0]);
-                        return timeA - timeB;
-                      })
-                      .map((attraction, idx) => (
-                        <div key={idx} className="attraction-item">
-                          <img
-                            src={attraction.thumbnail || "/placeholder.jpg"}
-                            alt={attraction.name}
-                          />
-                          <div className="attraction-details">
-                            <h4>{attraction.name || "Attraction"}</h4>
-                            <p>
-                              {attraction.description ||
-                                "No description available"}
-                            </p>
-                            <div className="attraction-meta">
-                              <span className="duration">
-                                ⏱️ Duration: {attraction.suggestedDuration}h
-                              </span>
-                              <span className="timing">
-                                🕒 {attraction.startTime} -{" "}
-                                {attraction.endTime}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                  ) : (
-                    <p>No attractions added for this day</p>
-                  )}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="no-schedule">
-              <p>No itinerary details available for this plan</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 
   if (!isLoggedIn) {
     return (
@@ -247,6 +179,7 @@ function MyPlans() {
         My Plans
       </h1>
       
+      {/* Tabs */}
       <div style={{ 
         marginBottom: '30px',
         borderBottom: '2px solid #e0e0e0'
@@ -336,32 +269,124 @@ function MyPlans() {
           {plans.length > 0 ? (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-              gap: '20px'
+              gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+              gap: '24px'
             }}>
-              {plans.map((plan) => (
-                <div key={plan._id} style={{
-                  border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  padding: '20px',
-                  backgroundColor: '#fff',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  cursor: 'pointer'
-                }}
-                onClick={() => setSelectedPlan(plan)}
-                >
-                  <h3 style={{ margin: '0 0 10px 0', color: '#333' }}>{plan.title}</h3>
-                  <p style={{ color: '#666', fontSize: '14px', margin: '0 0 10px 0' }}>
-                    {plan.destination}
-                  </p>
-                  <div style={{ fontSize: '12px', color: '#999' }}>
-                    Created: {new Date(plan.createdAt).toLocaleDateString()}
+              {plans.map((plan) => {
+                const totalAttractions = getTotalAttractions(plan);
+                return (
+                  <div 
+                    key={plan._id} 
+                    style={{
+                      border: '1px solid #ddd',
+                      borderRadius: '12px',
+                      padding: '24px',
+                      backgroundColor: '#fff',
+                      boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      ':hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 16px rgba(0,0,0,0.15)'
+                      }
+                    }}
+                    onClick={() => setSelectedPlan(plan)}
+                  >
+                    {/* Plan Header */}
+                    <div style={{ marginBottom: '16px' }}>
+                      <h3 style={{ 
+                        margin: '0 0 8px 0', 
+                        color: '#333',
+                        fontSize: '20px',
+                        fontWeight: '600'
+                      }}>
+                        📍 {plan.destination} Trip
+                      </h3>
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '12px',
+                        flexWrap: 'wrap'
+                      }}>
+                        <span style={{
+                          backgroundColor: '#e3f2fd',
+                          color: '#1976d2',
+                          padding: '4px 12px',
+                          borderRadius: '16px',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}>
+                          🗓️ {plan.numDays} Days
+                        </span>
+                        <span style={{
+                          backgroundColor: '#f3e5f5',
+                          color: '#7b1fa2',
+                          padding: '4px 12px',
+                          borderRadius: '16px',
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }}>
+                          📍 {totalAttractions} Places
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: '16px' }}>
+                      <p style={{ 
+                        color: '#666', 
+                        fontSize: '14px', 
+                        margin: '0 0 8px 0',
+                        lineHeight: '1.4'
+                      }}>
+                        <strong>Highlights:</strong>
+                      </p>
+                      {plan.schedule && plan.schedule.length > 0 ? (
+                        <div style={{ fontSize: '13px', color: '#888' }}>
+                          {plan.schedule.slice(0, 2).map((day, dayIndex) => (
+                            <div key={dayIndex} style={{ marginBottom: '4px' }}>
+                              <strong>Day {dayIndex + 1}:</strong>{' '}
+                              {day.attractions && day.attractions.length > 0 
+                                ? day.attractions.slice(0, 2).map(attr => attr.name).join(', ')
+                                : 'No activities planned'
+                              }
+                              {day.attractions && day.attractions.length > 2 && ` +${day.attractions.length - 2} more`}
+                            </div>
+                          ))}
+                          {plan.schedule.length > 2 && (
+                            <div style={{ color: '#007bff', fontStyle: 'italic' }}>
+                              +{plan.schedule.length - 2} more days...
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: '13px', color: '#999', fontStyle: 'italic' }}>
+                          No detailed itinerary available
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Plan Footer */}
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      paddingTop: '16px',
+                      borderTop: '1px solid #f0f0f0'
+                    }}>
+                      <div style={{ fontSize: '12px', color: '#999' }}>
+                        Created: {formatDate(plan.createdAt)}
+                      </div>
+                      <div style={{ 
+                        fontSize: '14px', 
+                        color: '#007bff',
+                        fontWeight: '500'
+                      }}>
+                        View Details →
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ marginTop: '10px', fontSize: '14px', color: '#007bff' }}>
-                    {plan.itinerary?.length || 0} days planned
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div style={{ 
@@ -371,11 +396,27 @@ function MyPlans() {
             }}>
               <h3>No Travel Plans Found</h3>
               <p>You haven't created any travel plans yet.</p>
+              <button
+                onClick={() => {
+                  window.location.hash = '#itinerary';
+                }}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  marginTop: '16px'
+                }}
+              >
+                Create Your First Plan
+              </button>
             </div>
           )}
         </div>
       )}
-
       {selectedPlan && (
         <div style={{
           position: 'fixed',
@@ -387,62 +428,240 @@ function MyPlans() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
+          zIndex: 1000,
+          padding: '20px'
         }}
         onClick={() => setSelectedPlan(null)}
         >
           <div style={{
             backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '8px',
-            maxWidth: '600px',
-            maxHeight: '80vh',
+            borderRadius: '12px',
+            maxWidth: '800px',
+            maxHeight: '90vh',
             overflow: 'auto',
-            margin: '20px'
+            width: '100%',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
           }}
           onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h2 style={{ margin: 0 }}>{selectedPlan.title}</h2>
+            <div style={{ 
+              padding: '24px 32px 16px 32px',
+              borderBottom: '1px solid #f0f0f0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              position: 'sticky',
+              top: 0,
+              backgroundColor: 'white',
+              zIndex: 10
+            }}>
+              <div>
+                <h2 style={{ margin: '0 0 8px 0', color: '#333', fontSize: '24px' }}>
+                  📍 {selectedPlan.destination} Trip
+                </h2>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '14px', color: '#666' }}>
+                    🗓️ {selectedPlan.numDays} Days
+                  </span>
+                  <span style={{ fontSize: '14px', color: '#666' }}>
+                    📅 Created: {formatDate(selectedPlan.createdAt)}
+                  </span>
+                  <span style={{ fontSize: '14px', color: '#666' }}>
+                    📍 {getTotalAttractions(selectedPlan)} Total Places
+                  </span>
+                </div>
+              </div>
               <button
                 onClick={() => setSelectedPlan(null)}
                 style={{
                   background: 'none',
                   border: 'none',
-                  fontSize: '24px',
+                  fontSize: '28px',
                   cursor: 'pointer',
-                  color: '#666'
+                  color: '#999',
+                  padding: '4px',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
               >
                 ×
               </button>
             </div>
-            <p><strong>Destination:</strong> {selectedPlan.destination}</p>
-            <p><strong>Created:</strong> {new Date(selectedPlan.createdAt).toLocaleDateString()}</p>
-            
-            {selectedPlan.itinerary && selectedPlan.itinerary.length > 0 && (
-              <div>
-                <h4>Itinerary:</h4>
-                {selectedPlan.itinerary.map((day, index) => (
-                  <div key={index} style={{
-                    border: '1px solid #eee',
-                    padding: '15px',
-                    marginBottom: '10px',
-                    borderRadius: '4px'
-                  }}>
-                    <h5>Day {day.day}: {day.title}</h5>
-                    <p>{day.description}</p>
-                    {day.activities && day.activities.length > 0 && (
-                      <ul>
-                        {day.activities.map((activity, actIndex) => (
-                          <li key={actIndex}>{activity}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+
+            <div style={{ padding: '24px 32px 32px 32px' }}>
+              {selectedPlan.schedule && Array.isArray(selectedPlan.schedule) && selectedPlan.schedule.length > 0 ? (
+                <div>
+                  <h3 style={{ marginBottom: '20px', color: '#333' }}>📋 Detailed Itinerary</h3>
+                  {selectedPlan.schedule.map((day, dayIndex) => (
+                    <div key={dayIndex} style={{
+                      border: '1px solid #e0e0e0',
+                      borderRadius: '8px',
+                      marginBottom: '20px',
+                      overflow: 'hidden'
+                    }}>
+                      <div style={{
+                        backgroundColor: '#f8f9fa',
+                        padding: '16px 20px',
+                        borderBottom: '1px solid #e0e0e0'
+                      }}>
+                        <h4 style={{ margin: 0, color: '#333', fontSize: '18px' }}>
+                          📅 Day {dayIndex + 1}
+                          {day.attractions && day.attractions.length > 0 && (
+                            <span style={{ 
+                              fontSize: '14px', 
+                              color: '#666', 
+                              fontWeight: 'normal',
+                              marginLeft: '12px'
+                            }}>
+                              ({day.attractions.length} activities)
+                            </span>
+                          )}
+                        </h4>
+                      </div>
+                      
+                      <div style={{ padding: '20px' }}>
+                        {day.attractions && Array.isArray(day.attractions) && day.attractions.length > 0 ? (
+                          <div style={{ display: 'grid', gap: '16px' }}>
+                            {day.attractions
+                              .sort((a, b) => {
+                                const timeA = parseInt(a.startTime?.split(":")[0] || "0");
+                                const timeB = parseInt(b.startTime?.split(":")[0] || "0");
+                                return timeA - timeB;
+                              })
+                              .map((attraction, idx) => (
+                                <div key={idx} style={{
+                                  display: 'flex',
+                                  gap: '16px',
+                                  padding: '16px',
+                                  border: '1px solid #f0f0f0',
+                                  borderRadius: '8px',
+                                  backgroundColor: '#fafafa'
+                                }}>
+                                  {attraction.thumbnail ? (
+                                    <img
+                                      src={attraction.thumbnail}
+                                      alt={attraction.name}
+                                      style={{
+                                        width: '80px',
+                                        height: '80px',
+                                        objectFit: 'cover',
+                                        borderRadius: '6px',
+                                        flexShrink: 0
+                                      }}
+                                    />
+                                  ) : (
+                                    <div style={{
+                                      width: '80px',
+                                      height: '80px',
+                                      backgroundColor: '#e0e0e0',
+                                      borderRadius: '6px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: '24px',
+                                      flexShrink: 0
+                                    }}>
+                                      {attraction.category === 'temple' ? '🛕' :
+                                       attraction.category === 'monument' ? '🏛️' :
+                                       attraction.category === 'museum' ? '🏛️' :
+                                       attraction.category === 'food' ? '🍽️' : '📍'}
+                                    </div>
+                                  )}
+                                  
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <h5 style={{ 
+                                      margin: '0 0 8px 0', 
+                                      color: '#333',
+                                      fontSize: '16px',
+                                      fontWeight: '600'
+                                    }}>
+                                      {attraction.name || "Unnamed Activity"}
+                                    </h5>
+                                    <p style={{ 
+                                      margin: '0 0 12px 0',
+                                      color: '#666',
+                                      fontSize: '14px',
+                                      lineHeight: '1.4'
+                                    }}>
+                                      {attraction.description || "No description available"}
+                                    </p>
+                                    
+                                    <div style={{ 
+                                      display: 'flex', 
+                                      gap: '16px',
+                                      alignItems: 'center',
+                                      fontSize: '13px',
+                                      color: '#888'
+                                    }}>
+                                      <span style={{
+                                        backgroundColor: '#e3f2fd',
+                                        color: '#1976d2',
+                                        padding: '4px 8px',
+                                        borderRadius: '12px',
+                                        fontWeight: '500'
+                                      }}>
+                                        ⏱️ {attraction.suggestedDuration || 1}h
+                                      </span>
+                                      
+                                      {attraction.startTime && attraction.endTime && (
+                                        <span style={{
+                                          backgroundColor: '#f3e5f5',
+                                          color: '#7b1fa2',
+                                          padding: '4px 8px',
+                                          borderRadius: '12px',
+                                          fontWeight: '500'
+                                        }}>
+                                          🕒 {attraction.startTime} - {attraction.endTime}
+                                        </span>
+                                      )}
+                                      
+                                      {attraction.category && (
+                                        <span style={{
+                                          backgroundColor: '#e8f5e8',
+                                          color: '#2e7d32',
+                                          padding: '4px 8px',
+                                          borderRadius: '12px',
+                                          fontWeight: '500',
+                                          textTransform: 'capitalize'
+                                        }}>
+                                          🏷️ {attraction.category}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))
+                            }
+                          </div>
+                        ) : (
+                          <div style={{ 
+                            textAlign: 'center', 
+                            padding: '40px 20px',
+                            color: '#999',
+                            fontStyle: 'italic'
+                          }}>
+                            No activities planned for this day
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '60px 20px',
+                  color: '#666'
+                }}>
+                  <h3>📝 No Detailed Itinerary</h3>
+                  <p>This travel plan doesn't have a detailed day-by-day itinerary yet.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
