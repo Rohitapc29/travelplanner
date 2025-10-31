@@ -74,7 +74,8 @@ const loginUser = async (req, res) => {
           phone: '0000000000',
           password: hashedPassword,
           travellerType: 'admin',
-          isAdmin: true
+          isAdmin: true,
+          isPremium: true 
         });
       }
 
@@ -84,6 +85,7 @@ const loginUser = async (req, res) => {
           name: 'Admin',
           email: ADMIN_EMAIL,
           isAdmin: true,
+          isPremium: true,
           joined: new Date().toLocaleDateString(),
         },
         token: generateToken(adminUser?._id || 'admin'),
@@ -94,6 +96,9 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await bcrypt.compare(password, user.password))) {
+      const isValidPremium = user.isPremium && 
+        (!user.premiumExpiryDate || new Date() < user.premiumExpiryDate);
+      
       res.json({
         user: {
           _id: user._id,
@@ -102,6 +107,9 @@ const loginUser = async (req, res) => {
           phone: user.phone,
           travellerType: user.travellerType,
           isAdmin: false,
+          isPremium: isValidPremium, 
+          subscriptionType: user.subscriptionType, 
+          premiumExpiryDate: user.premiumExpiryDate, 
           joined: user.joined.toLocaleDateString(), 
         },
         token: generateToken(user._id),
@@ -118,7 +126,10 @@ const loginUser = async (req, res) => {
 
 const verifyToken = async (req, res) => {
   try {
-   
+    const user = await User.findById(req.user._id);
+    const isValidPremium = user.isPremium && 
+      (!user.premiumExpiryDate || new Date() < user.premiumExpiryDate);
+    
     res.json({
       user: {
         _id: req.user._id,
@@ -126,6 +137,9 @@ const verifyToken = async (req, res) => {
         email: req.user.email,
         phone: req.user.phone,
         travellerType: req.user.travellerType,
+        isPremium: isValidPremium, 
+        subscriptionType: user.subscriptionType, 
+        premiumExpiryDate: user.premiumExpiryDate, 
         joined: req.user.joined.toLocaleDateString(),
       },
     });

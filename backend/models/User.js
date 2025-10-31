@@ -31,6 +31,23 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    isPremium: {
+      type: Boolean,
+      default: false,
+    },
+    premiumExpiryDate: {
+      type: Date,
+      default: null,
+    },
+    subscriptionType: {
+      type: String,
+      enum: ['monthly', 'yearly', null],
+      default: null,
+    },
+    stripeCustomerId: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,

@@ -58,7 +58,8 @@ app.use('/api/bookings', newBookingRoutes);
 
 app.use('/api/plans', planRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/admin', require('./routes/adminRoutes'));  
+app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/subscription', require('./routes/subscription'));  
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
