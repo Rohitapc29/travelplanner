@@ -1,11 +1,12 @@
 import React from "react";
+import Itinerary from "./Itinerary";
 
 // Import travel plan images
-import parisImg from "../assets/images/paris.avif";
-import baliImg from "../assets/images/bali.jpeg";
-import swissImg from "../assets/images/swiss.avif";
-import newYorkImg from "../assets/images/new-york.avif";
-import tokyoImg from "../assets/images/tokyo.jpeg";
+import delhiImg from "../assets/images/Delhi.jpg";
+import mumImg from "../assets/images/Mumbai.jpg";
+import goaImg from "../assets/images/Goa.jpeg";
+import agraImg from "../assets/images/Agra.jpg";
+import lehImg from "../assets/images/Leh.jpg";
 
 // Import hotel images
 import hiltonImg from "../assets/images/hilton.jpg";
@@ -14,22 +15,52 @@ import tajImg from "../assets/images/Taj.jpg";
 import hyattImg from "../assets/images/hyatt.jpg";
 import sheratonImg from "../assets/images/sheraton.jpg";
 
+// Dummy user avatars for reviews
+import avatar1 from "../assets/images/avatar1.jpeg";
+import avatar2 from "../assets/images/avatar2.jpeg";
+import avatar3 from "../assets/images/avatar3.avif";
+
 // Data for travel plans
 const popularPlans = [
-  { name: "Paris Getaway", image: parisImg, desc: "Exciting trip with top attractions." },
-  { name: "Bali Escape", image: baliImg, desc: "Relax and unwind in paradise." },
-  { name: "Swiss Alps", image: swissImg, desc: "Adventure awaits in the mountains." },
-  { name: "New York Tour", image: newYorkImg, desc: "Explore the city that never sleeps." },
-  { name: "Tokyo Highlights", image: tokyoImg, desc: "Experience the blend of tradition and tech." },
+  { name: "Delhi Highlights", image: delhiImg, desc: "Visit the iconic capital city of India." },
+  { name: "Mumbai Bustle", image: mumImg, desc: "Explore the city that never sleeps." },
+  { name: "Goa Retreat", image: goaImg, desc: "Nothing better than beaches and the sea." },
+  { name: "Agra Tour", image: agraImg, desc: "Peek into historic Wonders." },
+  { name: "Leh-Ladakh Experience", image: lehImg, desc: "Experience whispers of history and terrain." },
 ];
 
 // Data for top hotels
 const topHotels = [
-    { name: "Hilton", image: hiltonImg },
-    { name: "Marriott", image: marriottImg },
-    { name: "Taj", image: tajImg },
-    { name: "Hyatt", image: hyattImg },
-    { name: "Sheraton", image: sheratonImg }
+  { name: "Fairmont Jaipur", image: hiltonImg },
+  { name: "St Regis Goa", image: marriottImg },
+  { name: "Taj Rishikesh", image: tajImg },
+  { name: "Grand Hyatt", image: hyattImg },
+  { name: "JW Marriott", image: sheratonImg },
+];
+
+// Dummy reviews
+const reviews = [
+  {
+    name: "Aditi Sharma",
+    location: "Delhi",
+    text: "TravelMate made my Goa trip seamless! Loved the easy itinerary planner and hotel options.",
+    rating: 5,
+    avatar: avatar1,
+  },
+  {
+    name: "Rohan Mehta",
+    location: "Mumbai",
+    text: "Great platform for booking and planning together. Very intuitive and user-friendly!",
+    rating: 4,
+    avatar: avatar2,
+  },
+  {
+    name: "Sneha Iyer",
+    location: "Bangalore",
+    text: "I could manage flights, hotels, and my travel schedule in one place. Super convenient.",
+    rating: 5,
+    avatar: avatar3,
+  },
 ];
 
 function Home() {
@@ -42,7 +73,6 @@ function Home() {
           <p>
             Book flights, hotels, and create custom itineraries with TravelMate – your trusted travel companion.
           </p>
-          <button>Start Planning</button>
         </div>
       </section>
 
@@ -60,7 +90,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Top Hotels Section - UPDATED */}
+      {/* Top Hotels Section */}
       <section className="hotels-section">
         <h3>Top Hotels</h3>
         <div className="hotels">
@@ -68,8 +98,29 @@ function Home() {
             <div key={hotel.name} className="hotel-card">
               <img src={hotel.image} alt={hotel.name} />
               <h4>{hotel.name}</h4>
-              <p>Luxury and comfort for your stay.</p>
-              <button>Book Now</button>
+              <p>Highest rated luxury hotels</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Reviews Section */}
+      <section className="reviews-section">
+        <h3>What Our Travellers Say</h3>
+        <div className="reviews">
+          {reviews.map((review) => (
+            <div key={review.name} className="review-card">
+              <div className="review-header">
+                <img src={review.avatar} alt={review.name} />
+                <div>
+                  <h4>{review.name}</h4>
+                  <p>{review.location}</p>
+                </div>
+              </div>
+              <p className="review-text">“{review.text}”</p>
+              <div className="review-rating">
+                {"⭐".repeat(review.rating)}
+              </div>
             </div>
           ))}
         </div>
