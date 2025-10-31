@@ -34,12 +34,11 @@ const Premium = () => {
       period: 'per month',
       features: [
         '✅ Unlimited itinerary days',
-        '✅ All destinations worldwide',
+        '✅ More destinations available',
         '✅ Custom drag-drop planner',
         '✅ Flight & hotel booking',
         '✅ PDF export',
         '✅ Priority customer support',
-        '✅ AI-powered suggestions',
         '✅ Weather integration'
       ],
       color: '#007bff',
@@ -56,7 +55,6 @@ const Premium = () => {
         '✅ Everything in Monthly',
         '✅ 2 months FREE',
         '✅ Priority feature requests',
-        '✅ Exclusive travel guides',
         '✅ Advanced analytics',
         '✅ White-glove support',
         '✅ Beta feature access',
@@ -119,7 +117,7 @@ const Premium = () => {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        padding: '40px'
+        padding: '120px 40px 40px' // Changed from '40px' - added top padding
       }}>
         <div style={{ 
           textAlign: 'center',
@@ -168,7 +166,7 @@ const Premium = () => {
   return (
     <div style={{ 
       minHeight: '80vh',
-      padding: '40px 20px',
+      padding: '120px 20px 40px', // Changed from '40px 20px' - added 80px top padding
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       color: 'white'
     }}>
@@ -326,7 +324,7 @@ const Premium = () => {
             <div>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>🗺️</div>
               <h4>Unlimited Planning</h4>
-              <p style={{ opacity: 0.9 }}>Create itineraries for any duration to any destination worldwide</p>
+              <p style={{ opacity: 0.9 }}>Create itineraries for any duration to any destination</p>
             </div>
             <div>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎨</div>

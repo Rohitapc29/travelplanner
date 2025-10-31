@@ -9,6 +9,7 @@ import "./components/Settings.css"; // <-- Add this for Settings styling
 import Premium from "./components/Premium";
 import PremiumSuccess from "./components/PremiumSuccess";
 import PremiumGate from "./components/PremiumGate";
+import ItineraryPlanner from "./components/ItineraryPlanner";
 
 function App() {
   const [page, setPage] = useState("home");
@@ -112,6 +113,8 @@ function App() {
     switch (page) {
       case "home":
         return <Home />;
+      case "planner":
+        return <ItineraryPlanner />;
       case "itinerary":
         return <Itinerary />;
       case "plans":
@@ -425,6 +428,7 @@ function App() {
           {!user?.isAdmin && (
             <div className="nav-links">
               <button onClick={() => setPage("home")}>Home</button>
+              <button onClick={() => navigateTo("planner")}>Custom Itinerary</button>
               <button onClick={() => navigateTo("itinerary")}>Itinerary</button>
               <button onClick={() => navigateTo("plans")}>My Plans</button>
               <button onClick={() => navigateTo("flighthotels")}>Hotels & Flights</button>

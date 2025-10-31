@@ -281,6 +281,120 @@ function ItineraryPlanner() {
     await testAPIs();
   };
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isPremium = user.isPremium || user.subscriptionStatus === 'premium';
+  
+  if (!isPremium) {
+    return (
+      <div style={{
+        minHeight: '80vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px',
+        textAlign: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white'
+      }}>
+        <div style={{
+          background: 'rgba(255,255,255,0.1)',
+          borderRadius: '20px',
+          padding: '60px 40px',
+          maxWidth: '600px',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: '20px' }}>🔒</div>
+          <h1 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>
+            Premium Feature
+          </h1>
+          <p style={{ fontSize: '1.2rem', marginBottom: '30px', opacity: '0.9' }}>
+            Custom Itinerary Builder is a premium feature. Upgrade now to create unlimited personalized travel plans!
+          </p>
+          
+          <div style={{ marginBottom: '30px' }}>
+            <h3 style={{ marginBottom: '15px' }}>🎯 What you get with Premium:</h3>
+            <ul style={{ 
+              textAlign: 'left', 
+              display: 'inline-block',
+              fontSize: '16px',
+              lineHeight: '1.8'
+            }}>
+              <li>🛠️ Custom drag-and-drop itinerary builder</li>
+              <li>🗓️ Unlimited trip duration</li>
+              <li>📍 Access to all destinations</li>
+              <li>📄 PDF export of your itineraries</li>
+              <li>⭐ Save unlimited plans</li>
+              <li>🎧 Priority customer support</li>
+            </ul>
+          </div>
+
+          <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => {
+                window.location.hash = 'premium'; // Navigate to premium page
+              }}
+              style={{
+                background: 'linear-gradient(45deg, #FFD700, #FFA500)',
+                color: '#333',
+                border: 'none',
+                padding: '15px 30px',
+                borderRadius: '50px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 8px 25px rgba(255,215,0,0.4)';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = 'none';
+              }}
+            >
+              🚀 Upgrade to Premium
+            </button>
+            
+            <button
+              onClick={() => {
+                window.location.hash = 'itinerary'; // Go back to browse premade
+              }}
+              style={{
+                background: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: '2px solid rgba(255,255,255,0.3)',
+                padding: '15px 30px',
+                borderRadius: '50px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.background = 'rgba(255,255,255,0.3)';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.background = 'rgba(255,255,255,0.2)';
+              }}
+            >
+              ← Browse Premade Plans
+            </button>
+          </div>
+          
+          <p style={{ 
+            fontSize: '14px', 
+            opacity: '0.7', 
+            marginTop: '30px',
+            fontStyle: 'italic'
+          }}>
+            Free users can still browse and save our curated premade itineraries!
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="itinerary-container">
       <h1 className="itinerary-header">🇮🇳 India Travel Itinerary Planner</h1>

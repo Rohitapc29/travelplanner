@@ -60,6 +60,8 @@ app.use('/api/plans', planRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/subscription', require('./routes/subscription'));  
+app.use('/api/itineraries', require('./routes/itineraryRoutes'));
+app.use('/api/premade', require('./routes/premadeRoutes'));
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
