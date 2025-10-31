@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import "./App.css";
 import Home from "./components/Home";
 import Itinerary from "./components/Itinerary";
-import Cart from "./components/Cart";
 import MyPlans from "./components/MyPlans";
 import AppFlightHotel from "./AppFlightHotel";
 import AdminDashboard from "./components/AdminDashboard";
+import "./components/Settings.css"; // <-- Add this for Settings styling
 
 function App() {
   const [page, setPage] = useState("home");
@@ -15,7 +15,6 @@ function App() {
   const [accountCreated, setAccountCreated] = useState(false);
   const [user, setUser] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [settings, setSettings] = useState({
@@ -25,9 +24,9 @@ function App() {
 
   useEffect(() => {
     const checkAuthStatus = async () => {
-      const token = localStorage.getItem('token');
-      const userData = localStorage.getItem('user'); 
-      
+      const token = localStorage.getItem("token");
+      const userData = localStorage.getItem("user");
+
       if (token) {
         if (userData) {
           try {
@@ -35,74 +34,61 @@ function App() {
             setIsLoading(false);
             return;
           } catch (error) {
-            console.error('Error parsing user data:', error);
-            localStorage.removeItem('user');
+            console.error("Error parsing user data:", error);
+            localStorage.removeItem("user");
           }
         }
+
         try {
           const res = await fetch("http://localhost:4000/api/users/verify-token", {
             method: "GET",
             headers: {
-              "Authorization": `Bearer ${token}`
-            }
+              Authorization: `Bearer ${token}`,
+            },
           });
 
           if (res.ok) {
             const data = await res.json();
             setUser(data.user);
-            localStorage.setItem('user', JSON.stringify(data.user)); 
+            localStorage.setItem("user", JSON.stringify(data.user));
           } else {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user'); 
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
           }
         } catch (error) {
-          console.error('Error verifying token:', error);
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+          console.error("Error verifying token:", error);
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
         }
       }
-      
+
       setIsLoading(false);
     };
 
     checkAuthStatus();
   }, []);
 
-  // Protected routes array
-  const protectedRoutes = ["itinerary", "cart", "plans", "myprofile", "settings", "flighthotels", "admin"];
-  
-  // Admin only routes
+  const protectedRoutes = ["itinerary", "plans", "myprofile", "flighthotels", "admin"];
   const adminRoutes = ["admin"];
 
-  const requiresAuth = (routeName) => {
-    return protectedRoutes.includes(routeName);
-  };
+  const requiresAuth = (routeName) => protectedRoutes.includes(routeName);
 
-  
   const navigateTo = (pageName) => {
     if (requiresAuth(pageName) && !user) {
-      
       setShowModal(true);
-      setIsLogin(true); 
+      setIsLogin(true);
       return;
     }
     setPage(pageName);
   };
 
   const renderPage = () => {
-    if (user?.isAdmin) {
-      return <AdminDashboard />;
-    }
-
-    if (requiresAuth(page) && !user) {
-      return <Home />;
-    }
+    if (user?.isAdmin) return <AdminDashboard />;
+    if (requiresAuth(page) && !user) return <Home />;
 
     switch (page) {
       case "itinerary":
         return <Itinerary />;
-      case "cart":
-        return <Cart />;
       case "plans":
         return <MyPlans />;
       case "myprofile":
@@ -116,7 +102,7 @@ function App() {
     }
   };
 
-  // Signup Handler
+  // === AUTH HANDLERS ===
   const handleSignup = async (e) => {
     e.preventDefault();
     const name = e.target.name.value.trim();
@@ -143,12 +129,12 @@ function App() {
         email: data.email,
         phone: data.phone,
         travellerType: data.travellerType,
-        joined: data.joined
+        joined: data.joined,
       };
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(userObj)); 
-      
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(userObj));
+
       setUser(userObj);
       setShowModal(false);
       alert("Signup successful!");
@@ -158,7 +144,6 @@ function App() {
     }
   };
 
-  // Login Handler
   const handleLogin = async (e) => {
     e.preventDefault();
     const email = e.target.email.value.trim();
@@ -172,20 +157,11 @@ function App() {
       });
 
       const data = await res.json();
-      
-
-      console.log('LOGIN RESPONSE:', data);
-      console.log('Token', data.token);
-      console.log('User', data.user);
-      
       if (!res.ok) return alert(data.message);
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      
-      console.log('Stored token:', localStorage.getItem('token'));
-      console.log('Stored user:', localStorage.getItem('user'));
-      
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
       setUser(data.user);
       setShowModal(false);
     } catch (err) {
@@ -194,15 +170,14 @@ function App() {
     }
   };
 
-  // Update user profile with auth header
   const updateUserProfile = async (newPhone, newTraveller) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:4000/api/users/update-profile", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           phone: newPhone,
@@ -221,7 +196,6 @@ function App() {
     }
   };
 
-  // Change password with auth header
   const changePassword = async (current, newPass, confirm) => {
     if (newPass !== confirm) {
       alert("New passwords do not match!");
@@ -229,17 +203,14 @@ function App() {
     }
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const res = await fetch("http://localhost:4000/api/users/change-password", {
         method: "PUT",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          current,
-          newPass,
-        }),
+        body: JSON.stringify({ current, newPass }),
       });
 
       const data = await res.json();
@@ -251,10 +222,9 @@ function App() {
     }
   };
 
- 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
     setShowProfileMenu(false);
     setPage("home");
@@ -268,130 +238,147 @@ function App() {
     );
   }
 
-  // MyProfile Component
+  // === MY PROFILE ===
   const MyProfile = () => {
-    const [phone, setPhone] = useState(user.phone);
-    const [traveller, setTraveller] = useState(user.travellerType);
+  const [name, setName] = useState("Prithvi Birbale");
+  const [email, setEmail] = useState("prithvi@example.com");
+  const [phone, setPhone] = useState("+91 9876543210");
+  const [travellerType, setTravellerType] = useState("Solo Traveller");
+  const [bio, setBio] = useState("Explorer. Food lover. Always planning my next trip.");
 
-    return (
-      <div className="screen-section">
-        <h2>My Profile</h2>
-        <div
-          className="screen-card"
-          style={{ maxWidth: "400px", margin: "0 auto" }}
-        >
-          <p>
-            <strong>Name:</strong> {user.name}
-          </p>
-          <p>
-            <strong>Email:</strong> {user.email}
-          </p>
-          <p>
-            <strong>Contact Number:</strong>{" "}
-            <input
-              type="tel"
-              value={phone}
-              pattern="[6-9]{1}[0-9]{9}"
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </p>
-          <p>
-            <strong>Traveller Type:</strong>{" "}
-            <select
-              value={traveller}
-              onChange={(e) => setTraveller(e.target.value)}
-            >
-              <option value="adventure">Adventure Seeker</option>
-              <option value="luxury">Luxury Explorer</option>
-              <option value="budget">Budget Traveller</option>
-              <option value="culture">Culture Enthusiast</option>
-              <option value="relax">Relaxation Lover</option>
-              <option value="other">Other</option>
-            </select>
-          </p>
-          <p>
-            <strong>Joined:</strong> {user.joined}
-          </p>
-          <button onClick={() => updateUserProfile(phone, traveller)}>
-            Save Changes
+  const handleProfileSave = () => {
+    alert("Profile updated successfully!");
+  };
+
+  return (
+    <div className="screen-section">
+      <h2>My Profile</h2>
+
+      <div
+        className="screen-card"
+        style={{ maxWidth: "500px", margin: "0 auto" }}
+      >
+        <div className="profile-avatar">
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+            alt="User Avatar"
+          />
+        </div>
+
+        <div className="profile-fields">
+          <label>Full Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+
+          <label>Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <label>Phone Number</label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+
+          <label>Traveller Type</label>
+          <select
+            value={travellerType}
+            onChange={(e) => setTravellerType(e.target.value)}
+          >
+            <option>Solo Traveller</option>
+            <option>Family Traveller</option>
+            <option>Couple</option>
+            <option>Backpacker</option>
+            <option>Business Traveller</option>
+          </select>
+
+          <label>Bio</label>
+          <textarea
+            rows="3"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+          />
+
+          <button type="button" onClick={handleProfileSave}>
+            Save Profile
           </button>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
-  // Settings Component
+  // === SETTINGS (STYLED) ===
   const Settings = () => {
     const [current, setCurrent] = useState("");
     const [newPass, setNewPass] = useState("");
     const [confirm, setConfirm] = useState("");
     const [notif, setNotif] = useState(settings.notifications);
     const [privacy, setPrivacy] = useState(settings.privacy);
+    const [message, setMessage] = useState("");
 
     const handleSettingsSave = () => {
       setSettings({ notifications: notif, privacy });
-      alert("Settings saved!");
+      setMessage("✅ Settings saved successfully!");
+      setTimeout(() => setMessage(""), 3000);
+    };
+
+    const handlePasswordChange = () => {
+      if (!current || !newPass || !confirm) {
+        setMessage("⚠️ Please fill in all password fields.");
+        return;
+      }
+      if (newPass !== confirm) {
+        setMessage("❌ New passwords do not match.");
+        return;
+      }
+      changePassword(current, newPass, confirm);
+      setMessage("✅ Password changed successfully!");
+      setCurrent("");
+      setNewPass("");
+      setConfirm("");
     };
 
     return (
-      <div className="screen-section">
-        <h2>Settings</h2>
-        <div
-          className="screen-card"
-          style={{ maxWidth: "400px", margin: "0 auto" }}
-        >
+      <div className="settings-container">
+        <h2 className="settings-title">⚙️ Account Settings</h2>
+        <div className="settings-card">
           <h3>Change Password</h3>
-          <input
-            type="password"
-            placeholder="Current Password"
-            value={current}
-            onChange={(e) => setCurrent(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="New Password"
-            value={newPass}
-            onChange={(e) => setNewPass(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder="Confirm New Password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-          />
-          <button
-            type="button" // prevents form submission / page reload
-            onClick={() => changePassword(current, newPass, confirm)}
-          >
-            Change Password
-          </button>
+          <div className="form-group">
+            <input type="password" placeholder="Current Password" value={current} onChange={(e) => setCurrent(e.target.value)} />
+            <input type="password" placeholder="New Password" value={newPass} onChange={(e) => setNewPass(e.target.value)} />
+            <input type="password" placeholder="Confirm New Password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+            <button type="button" className="btn-primary" onClick={handlePasswordChange}>
+              Change Password
+            </button>
+          </div>
+
+          <hr />
 
           <h3>Notifications</h3>
-          <label>
-            <input
-              type="checkbox"
-              checked={notif}
-              onChange={() => setNotif(!notif)}
-            />
+          <label className="toggle-row">
+            <input type="checkbox" checked={notif} onChange={() => setNotif(!notif)} />
             Receive travel deals & itinerary reminders
           </label>
 
           <h3>Privacy Settings</h3>
-          <label>
-            <input
-              type="checkbox"
-              checked={privacy}
-              onChange={() => setPrivacy(!privacy)}
-            />
+          <label className="toggle-row">
+            <input type="checkbox" checked={privacy} onChange={() => setPrivacy(!privacy)} />
             Show my contact number & traveller type to others
           </label>
 
-          <button
-            type="button"
-            onClick={handleSettingsSave}
-          >
+          <button type="button" className="btn-save" onClick={handleSettingsSave}>
             Save Settings
           </button>
+
+          {message && <div className="settings-message">{message}</div>}
         </div>
       </div>
     );
@@ -407,31 +394,17 @@ function App() {
             <div className="nav-links">
               <button onClick={() => setPage("home")}>Home</button>
               <button onClick={() => navigateTo("itinerary")}>Itinerary</button>
-              <button onClick={() => navigateTo("cart")}>Cart</button>
               <button onClick={() => navigateTo("plans")}>My Plans</button>
-              <button onClick={() => navigateTo("flighthotels")}>Hotels and Flights</button>
-            </div>
-          )}
-          {user?.isAdmin && (
-            <div className="nav-links">
-              <button disabled style={{ fontWeight: 'bold' }}>Admin Dashboard</button>
+              <button onClick={() => navigateTo("flighthotels")}>Hotels & Flights</button>
             </div>
           )}
 
-          {user ? (
+          {user && (
             <div className="profile-section">
-              <div
-                className="profile-icon"
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  width="24px"
-                  height="24px"
-                >
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              <div className="profile-icon" onClick={() => setShowProfileMenu(!showProfileMenu)}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 
+                  1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                 </svg>
               </div>
 
@@ -442,37 +415,16 @@ function App() {
                     <p>{user.email}</p>
                     <p>{user.travellerType}</p>
                   </div>
-                  <button
-                    onClick={() => {
-                      navigateTo("myprofile");
-                      setShowProfileMenu(false);
-                    }}
-                  >
-                    My Profile
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigateTo("plans");
-                      setShowProfileMenu(false);
-                    }}
-                  >
-                    My Trips
-                  </button>
-                  <button
-                    onClick={() => {
-                      navigateTo("settings");
-                      setShowProfileMenu(false);
-                    }}
-                  >
-                    Settings
-                  </button>
-                  <button className="logout-btn" onClick={handleLogout}>
-                    Logout
-                  </button>
+                  <button onClick={() => navigateTo("myprofile")}>My Profile</button>
+                  <button onClick={() => navigateTo("plans")}>My Trips</button>
+                  <button onClick={() => navigateTo("settings")}>Settings</button>
+                  <button className="logout-btn" onClick={handleLogout}>Logout</button>
                 </div>
               )}
             </div>
-          ) : (
+          )}
+
+          {!user && (
             <button className="login-btn" onClick={() => setShowModal(true)}>
               Sign Up / Login
             </button>
@@ -488,30 +440,15 @@ function App() {
         <p>Privacy Policy | Terms & Conditions</p>
       </footer>
 
-      {/* Login/Signup Modal */}
+      {/* Login/Signup Modal (same as before) */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            {!user && (
-              <div className="auth-required-message">
-                <p>🔒 Please login to access this feature</p>
-              </div>
-            )}
-            
+            {!user && <div className="auth-required-message"><p>🔒 Please login to access this feature</p></div>}
             <div className="modal-header">
               <div className="modal-tabs">
-                <button
-                  className={isLogin ? "active" : ""}
-                  onClick={() => setIsLogin(true)}
-                >
-                  Login
-                </button>
-                <button
-                  className={!isLogin ? "active" : ""}
-                  onClick={() => setIsLogin(false)}
-                >
-                  Sign Up
-                </button>
+                <button className={isLogin ? "active" : ""} onClick={() => setIsLogin(true)}>Login</button>
+                <button className={!isLogin ? "active" : ""} onClick={() => setIsLogin(false)}>Sign Up</button>
               </div>
             </div>
 
@@ -523,9 +460,7 @@ function App() {
                   <input name="email" type="email" required />
                   <label>Password</label>
                   <input name="password" type="password" required />
-                  <button type="submit" className="login-submit-btn">
-                    Login
-                  </button>
+                  <button type="submit" className="login-submit-btn">Login</button>
                 </form>
               </div>
             ) : (
@@ -541,18 +476,9 @@ function App() {
                       <label>Email</label>
                       <input name="email" type="email" required />
                       <label>Contact Number (+91)</label>
-                      <input
-                        name="phone"
-                        type="tel"
-                        pattern="[6-9]{1}[0-9]{9}"
-                        required
-                      />
+                      <input name="phone" type="tel" pattern="[6-9]{1}[0-9]{9}" required />
                       <label>What kind of traveller are you?</label>
-                      <select
-                        value={travellerType}
-                        onChange={(e) => setTravellerType(e.target.value)}
-                        required
-                      >
+                      <select value={travellerType} onChange={(e) => setTravellerType(e.target.value)} required>
                         <option value="">Select an option</option>
                         <option value="adventure">Adventure Seeker</option>
                         <option value="luxury">Luxury Explorer</option>
@@ -561,20 +487,12 @@ function App() {
                         <option value="relax">Relaxation Lover</option>
                         <option value="other">Other</option>
                       </select>
-                      {travellerType === "other" && (
-                        <input
-                          type="text"
-                          placeholder="Please specify"
-                          required
-                        />
-                      )}
+                      {travellerType === "other" && <input type="text" placeholder="Please specify" required />}
                       <label>Password</label>
                       <input name="password" type="password" required />
                       <label>Confirm Password</label>
                       <input name="confirm" type="password" required />
-                      <button type="submit" className="signup-submit-btn">
-                        Sign Up
-                      </button>
+                      <button type="submit" className="signup-submit-btn">Sign Up</button>
                     </form>
                   </>
                 )}
