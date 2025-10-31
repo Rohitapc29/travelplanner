@@ -12,24 +12,26 @@ const registerUser = async (req, res) => {
   try {
     const { name, email, phone, password, travellerType } = req.body;
 
-    
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    
     const user = await User.create({
       name,
       email,
       phone,
       password: hashedPassword,
       travellerType,
-      joined: new Date(), 
+      joined: new Date(),
+
+      isPremium: false,
+      premiumExpiryDate: null,
+      subscriptionType: null,
+      stripeCustomerId: null
     });
 
     if (user) {
@@ -39,7 +41,10 @@ const registerUser = async (req, res) => {
         email: user.email,
         phone: user.phone,
         travellerType: user.travellerType,
-        joined: user.joined.toLocaleDateString(), 
+        joined: user.joined.toLocaleDateString(),
+        isPremium: user.isPremium || false,
+        subscriptionType: user.subscriptionType || null,
+        premiumExpiryDate: user.premiumExpiryDate || null,
         token: generateToken(user._id),
       });
     } else {

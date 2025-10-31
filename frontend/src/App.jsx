@@ -6,6 +6,9 @@ import MyPlans from "./components/MyPlans";
 import AppFlightHotel from "./AppFlightHotel";
 import AdminDashboard from "./components/AdminDashboard";
 import "./components/Settings.css"; // <-- Add this for Settings styling
+import Premium from "./components/Premium";
+import PremiumSuccess from "./components/PremiumSuccess";
+import PremiumGate from "./components/PremiumGate";
 
 function App() {
   const [page, setPage] = useState("home");
@@ -68,7 +71,27 @@ function App() {
     checkAuthStatus();
   }, []);
 
-  const protectedRoutes = ["itinerary", "plans", "myprofile", "flighthotels", "admin"];
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.substring(1);
+      
+      if (hash.startsWith('premium-success')) {
+        console.log('Detected premium-success route');
+        setPage('premium-success');
+      } else if (hash) {
+        setPage(hash);
+      } else {
+        setPage('home');
+      }
+    };
+    
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const protectedRoutes = ["itinerary", "plans", "myprofile", "flighthotels", "admin", "premium"];
   const adminRoutes = ["admin"];
 
   const requiresAuth = (routeName) => protectedRoutes.includes(routeName);
@@ -87,6 +110,8 @@ function App() {
     if (requiresAuth(page) && !user) return <Home />;
 
     switch (page) {
+      case "home":
+        return <Home />;
       case "itinerary":
         return <Itinerary />;
       case "plans":
@@ -97,6 +122,10 @@ function App() {
         return <Settings />;
       case "flighthotels":
         return <AppFlightHotel navigateToMainApp={navigateTo} />;
+      case "premium":
+        return <Premium />;
+      case "premium-success":
+        return <PremiumSuccess />;
       default:
         return <Home />;
     }
@@ -130,6 +159,9 @@ function App() {
         phone: data.phone,
         travellerType: data.travellerType,
         joined: data.joined,
+        isPremium: data.isPremium || false,
+        subscriptionType: data.subscriptionType || null,
+        premiumExpiryDate: data.premiumExpiryDate || null,
       };
 
       localStorage.setItem("token", data.token);
@@ -396,6 +428,16 @@ function App() {
               <button onClick={() => navigateTo("itinerary")}>Itinerary</button>
               <button onClick={() => navigateTo("plans")}>My Plans</button>
               <button onClick={() => navigateTo("flighthotels")}>Hotels & Flights</button>
+              <button 
+                onClick={() => navigateTo("premium")}
+                style={{
+                  background: user?.isPremium ? '#28a745' : 'linear-gradient(45deg, #FFD700, #FFA500)',
+                  color: user?.isPremium ? 'white' : '#333',
+                  fontWeight: 'bold'
+                }}
+              >
+                {user?.isPremium ? '✅ Premium' : '⭐ Go Premium'}
+              </button>
             </div>
           )}
 
@@ -414,10 +456,29 @@ function App() {
                     <strong>Hi, {user.name} 👋</strong>
                     <p>{user.email}</p>
                     <p>{user.travellerType}</p>
+                    <p style={{
+                      color: user?.isPremium ? '#28a745' : '#ffc107',
+                      fontWeight: 'bold',
+                      fontSize: '12px'
+                    }}>
+                      {user?.isPremium ? '✅ Premium Member' : '⭐ Free Plan'}
+                    </p>
                   </div>
                   <button onClick={() => navigateTo("myprofile")}>My Profile</button>
                   <button onClick={() => navigateTo("plans")}>My Trips</button>
                   <button onClick={() => navigateTo("settings")}>Settings</button>
+                  {!user?.isPremium && (
+                    <button 
+                      onClick={() => navigateTo("premium")}
+                      style={{
+                        background: 'linear-gradient(45deg, #FFD700, #FFA500)',
+                        color: '#333',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      ⭐ Upgrade to Premium
+                    </button>
+                  )}
                   <button className="logout-btn" onClick={handleLogout}>Logout</button>
                 </div>
               )}
